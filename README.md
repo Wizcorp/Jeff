@@ -12,9 +12,9 @@ Extract JSON meta-data and images from a SWF file
 
 ### Operation
 
-1 - Will parse the input directory to find SWF files corresponding to the given source file pattern.
-2 - Will sequentially parse and process the SWF files.
-3 - Will export JSON meta-data and images corresponding to the SWF files.
+* Will parse the input directory to find SWF files corresponding to the given source file pattern.
+* Will sequentially parse and process the SWF files.
+* Will export JSON meta-data and images corresponding to the SWF files.
 
 ## TODO
 

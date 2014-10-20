@@ -2,7 +2,7 @@
 	"name": "jeff",
 	"description": "Extracts Json meta-data and images from a SWF Flash file.",
 	"version": "0.1.0",
-	"private": true,
+	"private": false,
 	"author": {
 		"name": "Brice Chevalier",
 		"email": "bchevalier@wizcorp.jp"
