@@ -1,6 +1,6 @@
 {
 	"name": "jeff",
-	"description": "",
+	"description": "Extracts Json meta-data and images from a SWF Flash file.",
 	"version": "0.1.0",
 	"private": true,
 	"author": {
