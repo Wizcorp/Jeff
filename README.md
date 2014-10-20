@@ -1,6 +1,6 @@
 # jeff
 
-Extract JSON meta-data and images from a SWF flash
+Extract JSON meta-data and images from a SWF file
 
 ## Install
 
