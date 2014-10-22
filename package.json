@@ -8,7 +8,7 @@
 		"email": "bchevalier@wizcorp.jp"
 	},
 	"bin": {
-		"component-extractor": "./bin/jeff"
+		"jeff": "./bin/jeff"
 	},
 	"main": "./lib/index.js",
 	"dependencies": {
