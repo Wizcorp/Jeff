@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var Jeff    = require('../lib/index.js');
+var jeff    = require('../lib/index.js');
 var program = require('commander');
 
 // So many options!
@@ -9,53 +9,34 @@ var program = require('commander');
 program
 
 // Primary options
-.option('-s, --source <src file/regex>',                          'Source of the file(s) to export. Can be defined as a regular expression', '.*\\.swf')
-.option('-i, --inputDir <dir>',                                   'Input directory (default is ./); directory must exist', './')
-.option('-o, --outDir <dir>',                                     'Output directory (default is ./);', './')
+.option('-s, --source <src file/glob expression>',      'Source of the file(s) to export. Can be defined as a regular expression', '*.swf')
+.option('-i, --inputDir <dir>',                         'Input directory, directory must exist', '.')
+.option('-o, --outDir <dir>',                           'Output directory', '.')
 
 // Secondary options
-.option('-S, --scope <scope>',                                    'Scope of the animation to export, either \'classes\' or \'main\'', 'main')
-.option('-r, --ratio <ratio>',                                    'Image scale', '1')
-.option('-f, --renderFrames <boolean>',                           'To extract each frame of the animations as PNGs', 'false')
+.option('-S, --scope <scope>',                          'Scope of the animation to export, either \'classes\' or \'main\'', 'main')
+.option('-r, --ratio <ratio>',                          'Image scale', '1')
+.option('-f, --renderFrames <boolean/array of frames>', 'To extract specified frames of the animations as PNGs', 'false')
 
 // Optimisation options
-.option('-q, --imageQuality <quality>',                           'Image quality. From 0 to 100', '100')
-.option('-a, --createAtlas <boolean>',                            'To extract all the images of an animation into a single atlas', 'false')
-.option('-p, --powerOf2Images <boolean>',                         'To set the dimensions of output images to powers of 2', 'false')
-.option('-M, --maxImageDim <dimension>',                          'Maximum image dimension', '2048')
-.option('-m, --simplify <boolean>',                               'To simplify animations (reduce number of symbols)', 'false')
-.option('-b, --beautify <boolean>',                               'To beautify JSON output', 'false')
-.option('-n, --flatten <boolean>',                                'To extract a flat animation structure rather than a hierarchical structure', 'false')
-.option('-c, --compressMatrices <boolean>',                       'To extract animations with matrices under a compressed format', 'false')
+.option('-O, --imageOptim <boolean>',                   'To apply a lossless image compression', 'false')
+.option('-q, --imageQuality <quality>',                 'Image quality. From 0 to 100', '100')
+.option('-a, --createAtlas <boolean>',                  'To extract all the images of an animation into a single atlas', 'false')
+.option('-p, --powerOf2Images <boolean>',               'To set the dimensions of output images to powers of 2', 'false')
+.option('-M, --maxImageDim <dimension>',                'Maximum image dimension', '2048')
+.option('-m, --simplify <boolean>',                     'To simplify animations (reduce number of symbols)', 'false')
+.option('-b, --beautify <boolean>',                     'To beautify JSON output', 'false')
+.option('-n, --flatten <boolean>',                      'To extract a flat animation structure rather than a hierarchical structure', 'false')
+.option('-c, --compressMatrices <boolean>',             'To extract animations with matrices under a compressed format', 'false')
 
 // Advanced options
-.option('-R, --exportAtRoot <boolean>',                           'To export everything at the root of output directory', 'false')
-.option('-F, --firstFrameOnly <boolean>',                         'To extract the first frame only, as a PNG', 'false')
-.option('-C, --splitClasses <boolean>',                           'To split the different classes of the animation into several outputs', 'false')
-.option('-d, --ignoreData <boolean>',                             'Not to export JSON meta-data', 'false')
-.option('-I, --ignoreImages <boolean>',                           'Not to export images', 'false')
-.option('-e, --outlineEmphasis <coefficient>',                    'Emphasis of outlines when rendering Flash vectorial drawings', '1')
-
-// Advanced++ options (aka Legacy options)
-// Warnings: some options may not be practical in command line
-// TODO: tests
-.option('-g, --defaultGroupRatio <ratio>',                        'Default scale for groups', '1')
-.option('-u, --classGroups <map group-name class-name(regex)>',   'Groupings of classes corresponding to regular-expressions', '{}')
-.option('-v, --fileGroups <map group-name array-of-files>',       'Groupings of files', '{}')
-.option('-w, --fileGroupRatios <map group-name ratio>',           'Scales per file group', '{}')
-.option('-x, --classRatios <map class-name ratio>',               'Scales per class', '')
-.option('-y, --container <class-name>',                           'Name of class to use as container', '')
-.option('-z, --ignoreExpression <class-name(regex)>',             'Regular expression corresponding to classes to ignore for the export', '')
-.option('-U, --ignoreList <array of class-names>',                'List of classes to ignore for the export', '')
-.option('-V, --removeList <array of class-names>',                'List of classes to remove within the animations', '')
-.option('-W, --exclusiveList <array of class-names>',             'Exclusive list of classes to export', '')
-.option('-X, --postProcess <function>',                           'Post-process function that will be executed before generating the output files', '')
-.option('-Y, --customWriteFile <function>',                       'Custom write function for output files (JSONs and PNGs)', '')
-.option('-Z, --fixedSize <dimensions>',                           'To force dimensions of extracted animation', '')
+.option('-R, --exportAtRoot <boolean>',                 'To export everything at the root of the output directory', 'false')
+.option('-C, --splitClasses <boolean>',                 'To split the different classes of the animation into several outputs', 'false')
+.option('-d, --ignoreData <boolean>',                   'Not to export JSON meta-data', 'false')
+.option('-I, --ignoreImages <boolean>',                 'Not to export images', 'false')
+.option('-e, --outlineEmphasis <coefficient>',          'Emphasis of outlines when rendering Flash vectorial drawings', '1')
 
 .parse(process.argv);
-
-// console.log(JSON.stringify(program));
 
 var exportParams = {
 
@@ -70,6 +51,7 @@ var exportParams = {
 	renderFrames:       JSON.parse(program.renderFrames),
 
 	// Optimisation options
+	imageOptim:         JSON.parse(program.imageOptim),
 	imageQuality:       JSON.parse(program.imageQuality),
 	createAtlas:        JSON.parse(program.createAtlas),
 	powerOf2Images:     JSON.parse(program.powerOf2Images),
@@ -80,34 +62,14 @@ var exportParams = {
 	compressMatrices:   JSON.parse(program.compressMatrices),
 
 	// Advanced options
-	firstFrameOnly:     JSON.parse(program.firstFrameOnly),
 	splitClasses:       JSON.parse(program.splitClasses),
 	exportAtRoot:       JSON.parse(program.exportAtRoot),
 	ignoreData:         JSON.parse(program.ignoreData),
 	ignoreImages:       JSON.parse(program.ignoreImages),
-	outlineEmphasis:    JSON.parse(program.outlineEmphasis),
-
-	// Advanced++ options
-	defaultGroupRatio:  JSON.parse(program.defaultGroupRatio),
-	classGroups:        JSON.parse(program.classGroups),
-	fileGroups:         JSON.parse(program.fileGroups),
-	fileGroupRatios:    JSON.parse(program.fileGroupRatios),
-	classRatios:        program.classRatios ? JSON.parse(program.classRatios)      : undefined,
-	container:          program.classRatios ? JSON.parse(program.container)        : undefined,
-	ignoreExpression:   program.classRatios ? JSON.parse(program.ignoreExpression) : undefined,
-	ignoreList:         program.classRatios ? JSON.parse(program.ignoreList)       : undefined,
-	removeList:         program.classRatios ? JSON.parse(program.removeList)       : undefined,
-	exclusiveList:      program.classRatios ? JSON.parse(program.exclusiveList)    : undefined,
-	postProcess:        program.classRatios ? JSON.parse(program.postProcess)      : undefined,
-	customWriteFile:    program.classRatios ? JSON.parse(program.customWriteFile)  : undefined,
-	fixedSize:          program.classRatios ? JSON.parse(program.fixedSize)        : undefined
+	outlineEmphasis:    JSON.parse(program.outlineEmphasis)
 };
-
-console.log(exportParams);
 
 // Creating a new Jeff
 // His only purpose in life: extracting the given swf file(s) for your beautiful eyes
-var jeff = new Jeff();
-jeff.extractSwf(exportParams);
-
+jeff(exportParams);
 // Waving good bye to Jeff
