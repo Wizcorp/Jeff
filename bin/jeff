@@ -70,6 +70,5 @@ var exportParams = {
 };
 
 // Creating a new Jeff
-// His only purpose in life: extracting the given swf file(s) for your beautiful eyes
 jeff(exportParams);
 // Waving good bye to Jeff

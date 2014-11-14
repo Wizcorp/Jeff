@@ -1,5 +1,9 @@
 # Release history
 
+## v0.1.3
+
+Jeff's permission updated
+
 ## v0.1.2
 
 Few refactoring for usability
