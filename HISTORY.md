@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.6
+Updated dependencies
+
 ## v0.1.5
 Fixed instance name export
 

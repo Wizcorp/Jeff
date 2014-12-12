@@ -1,7 +1,7 @@
 {
 	"name": "jeff",
 	"description": "Extracts Json meta-data and images from a SWF Flash file.",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"private": false,
 	"author": {
 		"name": "Brice Chevalier",
@@ -12,6 +12,9 @@
 	},
 	"main": "./lib/index.js",
 	"dependencies": {
+		"canvas": "1.1.6",
+		"glob": "4.3.1",
+		"image-optim": "0.3.0",
 		"commander": "2.2.0",
 		"fs-extra": "0.8.1",
 		"async": "0.2.10",
