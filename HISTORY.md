@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.5
+Fixed instance name export
+
 ## v0.1.4
 
 Gordon parser updated: it now uses node Buffer API
