@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.7
+Changed fileGroups option from array of file names to regular expression
+
 ## v0.1.6
 Updated dependencies
 
