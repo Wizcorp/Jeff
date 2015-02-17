@@ -1,34 +1,33 @@
 {
-	"name": "jeff",
-	"description": "Extracts Json meta-data and images from a SWF Flash file.",
-	"version": "0.1.7",
-	"private": false,
-	"author": {
-		"name": "Brice Chevalier",
-		"email": "bchevalier@wizcorp.jp"
-	},
-	"bin": {
-		"jeff": "./bin/jeff"
-	},
-	"main": "./lib/index.js",
-	"dependencies": {
-		"canvas": "1.1.6",
-		"glob": "4.3.1",
-		"image-optim": "0.3.0",
-		"commander": "2.2.0",
-		"fs-extra": "0.8.1",
-		"async": "0.2.10",
-		"js-beautify": "1.4.2",
-		"node-pngquant-native": "0.0.12"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Wizcorp/jeff.git"
-	},
-	"licenses": [
-		{
-			"type": "MIT",
-			"url": "https://github.com/Wizcorp/jeff/blob/master/LICENSE"
-		}
-	]
+    "name": "jeff",
+    "description": "Extracts Json meta-data and images from a SWF Flash file.",
+    "version": "0.1.7",
+    "private": false,
+    "author": {
+        "name": "Brice Chevalier",
+        "email": "bchevalier@wizcorp.jp"
+    },
+    "bin": {
+        "jeff": "./bin/jeff"
+    },
+    "main": "./lib/index.js",
+    "dependencies": {
+        "async": "0.2.10",
+        "buffer-crc32": "^0.2.5",
+        "canvas": "1.1.6",
+        "commander": "2.2.0",
+        "fs-extra": "0.8.1",
+        "glob": "4.3.1",
+        "image-optim": "0.3.0",
+        "js-beautify": "1.4.2",
+        "node-pngquant-native": "0.0.12"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Wizcorp/jeff.git"
+    },
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://github.com/Wizcorp/jeff/blob/master/LICENSE"
+    }]
 }
