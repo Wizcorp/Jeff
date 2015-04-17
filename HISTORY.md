@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.8
+Fixed badly handled case when only one frame has to be prerendered and exported into an atlas
+
 ## v0.1.7
 Changed fileGroups option from array of file names to regular expression
 
