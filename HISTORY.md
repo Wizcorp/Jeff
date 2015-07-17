@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.9
+Fixed export of drawings that last several frames
+
 ## v0.1.8
 Fixed badly handled case when only one frame has to be prerendered and exported into an atlas
 

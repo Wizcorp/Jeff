@@ -34,7 +34,7 @@ For use as an api:
 
 ## Use
 Command line:
-	`jeff -src mySwf.swf`
+	`jeff -s mySwf.swf`
 
 API:
 ```
