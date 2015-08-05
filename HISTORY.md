@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.10
+Fixed line morphing
+
 ## v0.1.9
 Fixed export of drawings that last several frames
 
