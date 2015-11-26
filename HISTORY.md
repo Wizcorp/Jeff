@@ -1,5 +1,8 @@
 # Release history
 
+## v0.1.11
+Fixed empty rectangle hack in gordon
+
 ## v0.1.10
 Fixed line morphing
 
