@@ -1,5 +1,5 @@
 'use strict';
-var SwfImgRenderer  = require('./SwfImgRenderer/index');
+var renderImageToCanvas = require('./renderImageToCanvas.js');
 
 /* List of known issues:
 	- drawImage does implicit conversion of image position to integer
@@ -34,7 +34,7 @@ var SwfImgRenderer  = require('./SwfImgRenderer/index');
 // vectorial rendering library.
 
 function CanvasRenderer() {
-	this._imgRenderer = new SwfImgRenderer();
+	this._renderImageToCanvas = renderImageToCanvas;
 
 	this._rendering = false;
 	this._callback  = undefined;

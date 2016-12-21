@@ -3,8 +3,8 @@
 
 var DoublyList = require('./DoublyList.js');
 
-function Box(element, left, right, top, bottom) {
-	this.e = element;
+function Box(left, right, top, bottom, element) {
+	this.e = element || null;
 
 	this.l = left;
 	this.r = right;
@@ -49,13 +49,13 @@ Box.prototype.reset = function (left, right, top, bottom) {
  */
 
 
-// TODO: to speed up the process, replace DoublyList by a tree structure for fastest insertion and space fragmentation
+// TODO: to speed up the process, replace DoublyList by a tree structure for faster insertion and space fragmentation
 function BoxPartitioning(upperBounds, priorityZone) {
 	this._freeSpace = new DoublyList();
-	this._freeSpace.add(new Box(undefined, upperBounds.left, upperBounds.right, upperBounds.top, upperBounds.bottom));
+	this._freeSpace.add(new Box(upperBounds.left, upperBounds.right, upperBounds.top, upperBounds.bottom));
 
 	this.occupiedSpace = [];
-	this.occupiedBounds = new Box(undefined, Infinity, -Infinity, Infinity, -Infinity);
+	this.occupiedBounds = new Box(Infinity, -Infinity, Infinity, -Infinity);
 
 	var priorityLeft, priorityRight, priorityTop, priorityBottom;
 	if (priorityZone) {
@@ -69,7 +69,7 @@ function BoxPartitioning(upperBounds, priorityZone) {
 		priorityTop    = Infinity;
 		priorityBottom = -Infinity;
 	}
-	this._priorityZone = new Box(undefined, priorityLeft, priorityRight, priorityTop, priorityBottom);
+	this._priorityZone = new Box(priorityLeft, priorityRight, priorityTop, priorityBottom);
 
 	this.nRejections = 0;
 }
@@ -116,19 +116,19 @@ BoxPartitioning.prototype._fragmentFreeSpace = function (newBox) {
 			// creating new free space boxes
 
 			// box 1
-			var newFreeSpaceBox1 = new Box(undefined, l1, l0, t1, b1);
+			var newFreeSpaceBox1 = new Box(l1, l0, t1, b1);
 			if (newFreeSpaceBox1.a > 0) newFreeSpaceBoxes.push(newFreeSpaceBox1);
 
 			// box 2
-			var newFreeSpaceBox2 = new Box(undefined, l1, r1, t1, t0);
+			var newFreeSpaceBox2 = new Box(l1, r1, t1, t0);
 			if (newFreeSpaceBox2.a > 0) newFreeSpaceBoxes.push(newFreeSpaceBox2);
 
 			// box 3
-			var newFreeSpaceBox3 = new Box(undefined, r0, r1, t1, b1);
+			var newFreeSpaceBox3 = new Box(r0, r1, t1, b1);
 			if (newFreeSpaceBox3.a > 0) newFreeSpaceBoxes.push(newFreeSpaceBox3);
 
 			// box 4
-			var newFreeSpaceBox4 = new Box(undefined, l1, r1, b0, b1);
+			var newFreeSpaceBox4 = new Box(l1, r1, b0, b1);
 			if (newFreeSpaceBox4.a > 0) newFreeSpaceBoxes.push(newFreeSpaceBox4);
 
 			freeSpacePtr = next;
@@ -218,7 +218,7 @@ BoxPartitioning.prototype.add = function (element, w, h) {
 		return 0;
 	}
 
-	var elementBox = new Box(element, position.x, position.x + w, position.y, position.y + h);
+	var elementBox = new Box(position.x, position.x + w, position.y, position.y + h, element);
 	this.occupiedSpace.push(elementBox);
 	this._fragmentFreeSpace(elementBox);
 
