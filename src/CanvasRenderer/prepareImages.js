@@ -3,7 +3,6 @@ var Canvas         = require('canvas');
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._prepareImages = function () {
-
 	// Creating the list of images
 	var imagesToPrepare = [];
 	var symbolList = this._extractor._symbolList;
@@ -33,25 +32,11 @@ CanvasRenderer.prototype._prepareImages = function () {
 
 	var nImagesReady = 0;
 	var self = this;
-	var onWrittenCallBack = function (imageData, imageBuffer) {
-		var img = new Canvas.Image(); // Create a new Image
-		img.src = imageBuffer;
-
-		if (img.width > 0 && img.height > 0) {
-
-			// Creating canvas for drawing the image
-			var imageCanvas  = new Canvas();
-			var imageContext = imageCanvas.getContext('2d');
-
-			imageCanvas.width  = img.width;
-			imageCanvas.height = img.height;
-
+	var onWrittenCallBack = function (imageData, imageCanvas) {
+		if (imageCanvas.width > 0 && imageCanvas.height > 0) {
 			self._images[imageData.id] = imageCanvas;
-
-			imageContext.drawImage(img, 0, 0, img.width, img.height);
 		} else {
-			throw new Error('nooooo!')
-			console.warn('[CanvasRenderer.prepareImages] Image is empty', img.width, img.height, imageData.id, JSON.stringify(imageBuffer));
+			console.warn('[CanvasRenderer.prepareImages] Image is empty', imageCanvas.width, imageCanvas.height, imageData.id);
 		}
 
 		nImagesReady += 1;
@@ -61,6 +46,6 @@ CanvasRenderer.prototype._prepareImages = function () {
 	};
 
 	for (var i = 0; i < imagesToPrepare.length; i += 1) {
-		this._imgRenderer.render(imagesToPrepare[i], onWrittenCallBack);
+		this._renderImageToCanvas(imagesToPrepare[i], onWrittenCallBack);
 	}
 };
