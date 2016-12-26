@@ -1,5 +1,4 @@
 'use strict';
-var Canvas         = require('canvas');
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._prepareImages = function () {

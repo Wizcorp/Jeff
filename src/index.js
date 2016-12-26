@@ -229,6 +229,11 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 						return;
 					}
 
+					// TODO: handle DoAction
+					if (swfObject.type === 'DoAction') {
+						return;
+					}
+
 					console.log('Jeff.parseFile: swfObject not handled, ', swfObject);
 					return;
 				}
@@ -236,6 +241,7 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 				swfObjects[id] = swfObject;
 			},
 			function (error) {
+				// console.error('swfObjects', JSON.stringify(swfObjects))
 				self._swfObjectsPerFileGroup.push(swfObjects);
 				nextSwfCb(error);
 			}
