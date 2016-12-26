@@ -354,14 +354,6 @@ SwfParser.prototype = {
 
 	_handleSymbolClass: function (stream, offset, len, frm) {
 		var count = stream.readUI16();
-
-		// TODO: remove if proven 
-		// var symbolClasses = frm.symbolClasses;
-		// if (!symbolClasses) {
-		// 	console.warn('No symbolClass on _handleSymbolClass');
-		// 	return;
-		// }
-
 		while (count--) {
 			var id = stream.readUI16();
 			var name = stream.readString();

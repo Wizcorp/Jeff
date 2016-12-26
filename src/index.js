@@ -241,7 +241,6 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 				swfObjects[id] = swfObject;
 			},
 			function (error) {
-				// console.error('swfObjects', JSON.stringify(swfObjects))
 				self._swfObjectsPerFileGroup.push(swfObjects);
 				nextSwfCb(error);
 			}
