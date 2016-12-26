@@ -109,6 +109,7 @@ SwfParser.prototype = {
 			frameSize: stream.readRect(),
 			frameRate: stream.readUI16() / 256
 		});
+		this._symbolClasses = {};
 		//parse the main frame that contains everything else
 		this._parseMainFrame(stream, cb);
 	},
@@ -118,20 +119,18 @@ SwfParser.prototype = {
 		var code = 0;
 		var timeline = [];
 		var frameCount = stream.readUI16();
-		var symbolClasses = {};
 		var mainFrame = {
 			type: 'main',
 			frameCount: frameCount, //maybe useless since timeline.length has it too
 			id: 0,
 			timeline: timeline,
-			symbolClasses: symbolClasses
+			symbolClasses: this._symbolClasses
 		};
 		var f = 0;
 		do {
 			var frm = {
 				type: 'frame',
-				displayList: {},
-				symbolClasses: symbolClasses
+				displayList: {}
 			};
 			f++;
 			var numTags = 0;
@@ -315,16 +314,26 @@ SwfParser.prototype = {
 	},
 	_handleEnableDebugger2: function (stream, offset, len) { stream.seek(len); offset = offset; },
 	_handleExportAssets: function (stream, offset, len) {
-		var tags = [];
-		var exportAssets = {
-			tags: tags
-		};
+		// var tags = [];
+		// var exportAssets = {
+		// 	type: 'exportAssets',
+		// 	tags: tags
+		// };
 
+		// var count = stream.readUI16();
+		// for (var i = 0; i < count; i += 1) {
+		// 	tags.push({ id: stream.readUI16(), name: stream.readString() });
+		// }
+		// this.onData(exportAssets);
+
+		// Simply adding pair (name, id) to list of symbol classes
+		// (is it the right way to do?)
 		var count = stream.readUI16();
 		for (var i = 0; i < count; i += 1) {
-			tags.push({ id: stream.readUI16(), name: stream.readString() });
+			var id = stream.readUI16();
+			var name = stream.readString();
+			this._symbolClasses[name] = id;
 		}
-		this.onData(exportAssets);
 	},
 	_handleFileAttributes: function (stream) { stream.readUI32(); },
 	_handleMetadata: function (stream) {
@@ -345,16 +354,10 @@ SwfParser.prototype = {
 
 	_handleSymbolClass: function (stream, offset, len, frm) {
 		var count = stream.readUI16();
-		var symbolClasses = frm.symbolClasses;
-		if (!symbolClasses) {
-			console.warn('No symbolClass on _handleSymbolClass');
-			return;
-		}
-
 		while (count--) {
 			var id = stream.readUI16();
 			var name = stream.readString();
-			symbolClasses[name] = id;
+			this._symbolClasses[name] = id;
 		}
 	},
 

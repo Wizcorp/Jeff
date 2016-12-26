@@ -229,6 +229,11 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 						return;
 					}
 
+					// TODO: handle DoAction
+					if (swfObject.type === 'DoAction') {
+						return;
+					}
+
 					console.log('Jeff.parseFile: swfObject not handled, ', swfObject);
 					return;
 				}

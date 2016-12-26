@@ -1,8 +1,8 @@
 'use strict';
 
 var zlib   = require('zlib');
-var Canvas = require('canvas');
-var CImage = Canvas.Image;
+var Canvas = require('./Canvas');
+var Image  = require('./Image');
 
 function renderImageToCanvas(swfObject, whenDone) {
 	if (swfObject.colorData) {
@@ -18,6 +18,7 @@ function renderPng(swfObject, whenDone) {
 		// Should never happen unless caller is wrong
 		throw new Error('Invalid data for PNG file');
 	}
+
 	inflate(swfObject.colorData, function (buffer) {
 		swfObject.data = buffer;
 		translatePng(swfObject, whenDone);
@@ -47,7 +48,7 @@ function inflate(strdata, onData) {
 function translateJpg(swfObject, whenDone) {
 	// Image creation
 	var uri = 'data:image/jpeg;base64,' + new Buffer(swfObject.data).toString('base64');
-	var image = new CImage();
+	var image = new Image();
 	image.src = uri;
 
 	// Writing image into canvas in order to manipulate its pixels

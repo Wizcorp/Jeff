@@ -1,5 +1,5 @@
 'use strict';
-var Canvas         = require('canvas');
+var Canvas         = require('./Canvas');
 var CanvasRenderer = require('./main');
 
 // function transformInverse(m) {
