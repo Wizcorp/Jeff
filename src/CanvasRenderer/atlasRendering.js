@@ -1,5 +1,5 @@
 'use strict';
-var Canvas          = require('canvas');
+var Canvas          = require('./Canvas');
 var CanvasRenderer  = require('./main');
 var BoxPartitioning = require('./BoxPartitioning');
 
@@ -11,7 +11,6 @@ function nextHighestPowerOfTwo(x) {
 	return x + 1;
 }
 
-var MAX_ATLAS_DIM = 2048;
 CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 	/* jshint maxstatements: 50 */
 	var id, graphicDim;
@@ -49,6 +48,7 @@ CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 		{ left: 0, right: sqrSide,         top: 0, bottom: sqrSide }
 	];
 
+	var maxAtlasDim = this._options.maxImageDim;
 	var bestLowerBound = 0;
 	var bestAlpha = 0;
 	for (var l = 0; l < priorityZones.length; l += 1) {
@@ -58,7 +58,7 @@ CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 			beta = 1 - alpha;
 
 			graphics.sort(cmpFunc);
-			var boxPartioning = new BoxPartitioning({ left: 0, right: MAX_ATLAS_DIM, top: 0, bottom: MAX_ATLAS_DIM }, priorityZone);
+			var boxPartioning = new BoxPartitioning({ left: 0, right: maxAtlasDim, top: 0, bottom: maxAtlasDim }, priorityZone);
 
 			for (var g = 0; g < graphics.length; g += 1) {
 				var graphic = graphics[g];

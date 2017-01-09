@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var jeff    = require('../lib/index.js');
+var jeff    = require('../src/index.js');
 var program = require('commander');
 
 // So many options!
@@ -23,7 +23,7 @@ program
 .option('-q, --imageQuality <quality>',                 'Image quality. From 0 to 100', '100')
 .option('-a, --createAtlas <boolean>',                  'To extract all the images of an animation into a single atlas', 'false')
 .option('-p, --powerOf2Images <boolean>',               'To set the dimensions of output images to powers of 2', 'false')
-.option('-M, --maxImageDim <dimension>',                'Maximum image dimension', '2048')
+.option('-M, --maxImageDim <number>',                   'Maximum image dimension', '2048')
 .option('-m, --simplify <boolean>',                     'To simplify animations (reduce number of symbols)', 'false')
 .option('-b, --beautify <boolean>',                     'To beautify JSON output', 'false')
 .option('-n, --flatten <boolean>',                      'To extract a flat animation structure rather than a hierarchical structure', 'false')
@@ -34,6 +34,7 @@ program
 .option('-C, --splitClasses <boolean>',                 'To split the different classes of the animation into several outputs', 'false')
 .option('-d, --ignoreData <boolean>',                   'Not to export JSON meta-data', 'false')
 .option('-I, --ignoreImages <boolean>',                 'Not to export images', 'false')
+.option('-F, --filtering <filtering method>',           'Filtering that should be used when rendering the animation', 'linear')
 .option('-e, --outlineEmphasis <coefficient>',          'Emphasis of outlines when rendering Flash vectorial drawings', '1')
 
 .parse(process.argv);
@@ -66,6 +67,7 @@ var exportParams = {
 	exportAtRoot:       JSON.parse(program.exportAtRoot),
 	ignoreData:         JSON.parse(program.ignoreData),
 	ignoreImages:       JSON.parse(program.ignoreImages),
+	filtering:          program.filtering,
 	outlineEmphasis:    JSON.parse(program.outlineEmphasis)
 };
 

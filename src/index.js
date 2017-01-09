@@ -77,9 +77,10 @@ function JeffOptions(params) {
 	this.splitClasses      = params.splitClasses      || false;
 	this.ignoreImages      = params.ignoreImages      || false;
 	this.ignoreData        = params.ignoreData        || false;
+	this.filtering         = params.filtering         || 'linear';
 	this.outlineEmphasis   = params.outlineEmphasis   || 1;
 
-	// Advanced++ options (aka Legacy options)
+	// Advanced++ options
 	// Not usable as command line options
 	this.defaultGroupRatio = params.defaultGroupRatio || 1;
 	this.classGroups       = params.classGroups       || {};
@@ -102,19 +103,21 @@ function JeffOptions(params) {
 	this.onlyOneFrame      = (this.renderFrames instanceof Array) && (this.renderFrames.length === 1);
 
 	// Checking for uncompatible options
-	if (this.renderFrames && this.simplify) {
-		this.simplify = false;
-		// console.warn('[Jeff] Option to simplify will be ignored');
-	}
+	if (this.renderFrames) {
+		if (this.simplify) {
+			this.simplify = false;
+			// console.warn('[Jeff] Option to simplify will be ignored');
+		}
 
-	if (this.renderFrames && this.flatten) {
-		this.flatten = false;
-		// console.warn('[Jeff] Option to flatten will be ignored');
-	}
+		if (this.flatten) {
+			this.flatten = false;
+			// console.warn('[Jeff] Option to flatten will be ignored');
+		}
 
-	if (this.renderFrames && this.compressMatrices) {
-		this.compressMatrices = false;
-		// console.warn('[Jeff] Option to compress matrices will be ignored');
+		if (this.compressMatrices) {
+			this.compressMatrices = false;
+			// console.warn('[Jeff] Option to compress matrices will be ignored');
+		}
 	}
 }
 
@@ -179,7 +182,6 @@ Jeff.prototype._parseFileGroup = function (fileGroup, nextGroupCb) {
 	this._fileGroupName          = fileGroup.output;
 	this._fileGroupRatio         = this._options.ratio * (this._options.fileGroupRatios[this._fileGroupName] || this._options.defaultGroupRatio);
 	var self = this;
-console.error('parsing', fileGroup.input)
 	async.eachSeries(fileGroup.input,
 		function (swfName, next) {
 			self._parseFile(swfName, next);
@@ -224,6 +226,11 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 
 					// TODO: handle DoAbc
 					if (swfObject.type === 'DoAbc') {
+						return;
+					}
+
+					// TODO: handle DoAction
+					if (swfObject.type === 'DoAction') {
 						return;
 					}
 
@@ -304,7 +311,7 @@ Jeff.prototype._generateImageName = function (imgName) {
 		imgPath = path.basename(imgPath);
 	}
 
-	return imgPath;
+	return imgPath + '.png';
 };
 
 Jeff.prototype._generateJsonFileName = function () {
@@ -384,7 +391,7 @@ Jeff.prototype._extractImages = function (imageList) {
 	var nbImages = imageList.length;
 	for (var i = 0, nImages = nbImages; i < nImages; i += 1) {
 		var imageName = this._generateImageName(imageList[i].name);
-		var imagePath = path.join(this._options.outDir, imageName + '.png');
+		var imagePath = path.join(this._options.outDir, imageName);
 		this._canvasToPng(imagePath, imageList[i].img);
 
 		imageNames[i] = imageName;
@@ -426,9 +433,10 @@ Jeff.prototype._extractData = function (graphicProperties, imageNames) {
 	// Constructing metadata of conversion properties (for importing purpose)
 	var exportProperties = {
         app: 'https://www.npmjs.com/package/jeff',
-        version: '0.2.0',
+        version: '0.2.1', // TODO: fetch version number automatically from package.json
         frameRate: 25,
         scale: this._options.ratio,
+        filtering: this._options.filtering,
         mipmapCompatible: this._options.powerOf2Images,
         compressedMatrices: this._options.compressMatrices,
         prerendered: this._options.renderFrames ? true : false
