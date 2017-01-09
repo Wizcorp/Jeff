@@ -1,8 +1,8 @@
 'use strict';
 
-var zlib   = require('zlib');
-var Canvas = require('./Canvas');
-var Image  = require('./Image');
+var zlib      = require('zlib');
+var getCanvas = require('./Canvas');
+var getImage  = require('./Image');
 
 function renderImageToCanvas(swfObject, whenDone) {
 	if (swfObject.colorData) {
@@ -48,13 +48,13 @@ function inflate(strdata, onData) {
 function translateJpg(swfObject, whenDone) {
 	// Image creation
 	var uri = 'data:image/jpeg;base64,' + new Buffer(swfObject.data).toString('base64');
-	var image = new Image();
+	var image = getImage();
 	image.src = uri;
 
 	// Writing image into canvas in order to manipulate its pixels
 	var width   = image.width;
 	var height  = image.height;
-	var canvas  = new Canvas(width, height);
+	var canvas  = getCanvas(width, height);
 	var context = canvas.getContext('2d');
 	context.drawImage(image, 0, 0);
 
@@ -85,7 +85,7 @@ function translateJpg(swfObject, whenDone) {
 function translatePng(swfObject, whenDone) {
 	var width  = swfObject.width;
 	var height = swfObject.height;
-	var canvas = new Canvas(width, height);
+	var canvas = getCanvas(width, height);
 	var context = canvas.getContext('2d');
 
 	var colorTableSize = swfObject.colorTableSize || 0;
@@ -128,7 +128,7 @@ function translatePng(swfObject, whenDone) {
 				pxData[pxIdx + 2] = data[idx + 2] * premultiplierInv;
 				pxData[pxIdx + 3] = alpha;
 			}
-			
+
 			cmIdx += 1;
 			pxIdx += 4;
 		}

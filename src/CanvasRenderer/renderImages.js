@@ -1,5 +1,5 @@
 'use strict';
-var Canvas         = require('./Canvas');
+var getCanvas      = require('./Canvas');
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
@@ -9,7 +9,7 @@ CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
 
 	// Updating class ratios with respect to the fixed size dimension
 	if (hasFixedSize) {
-		
+
 		var classRatiosTmp = {};
 		var fixedWidth     = this._options.fixedSize.width;
 		var fixedHeight    = this._options.fixedSize.height;
@@ -173,7 +173,7 @@ function getGraphicsToRender(symbols, symbolList, images) {
 var nBytes = 0;
 CanvasRenderer.prototype._renderGraphics = function (graphics, graphicDims, canvasses) {
 	for (var id in graphics) {
-		var canvas  = new Canvas();
+		var canvas  = getCanvas();
 		var context = canvas.getContext('2d');
 
 		var graphic    = graphics[id];
@@ -239,7 +239,7 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 			var nFrames = frames.length;
 			for (f = 0; f < nFrames; f += 1) {
 				var frame   = frames[f];
-				var canvas  = new Canvas();
+				var canvas  = getCanvas();
 				var context = canvas.getContext('2d');
 
 				var frameBounds = bounds[frame];
@@ -303,7 +303,7 @@ function augmentToNextPowerOf2(canvasses) {
 		var height = nextHighestPowerOfTwo(canvas.height);
 
 		// Creating a canvas with power of 2 dimensions
-		var po2Canvas  = new Canvas();
+		var po2Canvas  = getCanvas();
 		var po2Context = po2Canvas.getContext('2d');
 		po2Canvas.width  = width;
 		po2Canvas.height = height;
@@ -356,7 +356,7 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 				+ '(File Group ' + this._extractor._fileGroupName + ', Class ' + this._extractor._classGroupName + ')'
 			);
 		}
-			
+
 	} else {
 		if (this._options.powerOf2Images) {
 			augmentToNextPowerOf2(canvasses);
