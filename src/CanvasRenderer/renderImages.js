@@ -1,5 +1,5 @@
 'use strict';
-var getCanvas      = require('./Canvas');
+var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._getMaxDimensions = function (graphics) {

@@ -1,21 +1,12 @@
 "use strict"
 
-function getImage() {
+var Image;
 
-	console.log("Using getImage");
-	
-	var image = null;
-
-	if (typeof(window) !== 'undefined' && typeof(document) !== 'undefined' && typeof(document.createElement) !== 'undefined') {
-		image = document.createElement('img');
-
-		return image;
-	} else {
-		var Canvas = require('./Canvas');
-		image = Canvas.Image;
-
-		return image;
-	}
+if (typeof(window) !== 'undefined' && window.Image) {
+	Image = window.Image;
+} else {
+	var Canvas = require('./Canvas');
+	Image = Canvas.Image;
 }
 
-module.exports = getImage;
+module.exports = Image;

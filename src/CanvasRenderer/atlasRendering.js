@@ -1,5 +1,5 @@
 'use strict';
-var getCanvas       = require('./Canvas');
+var getCanvas       = require('./GetCanvas');
 var CanvasRenderer  = require('./main');
 var BoxPartitioning = require('./BoxPartitioning');
 

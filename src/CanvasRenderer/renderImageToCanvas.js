@@ -1,8 +1,8 @@
 'use strict';
 
 var zlib      = require('zlib');
-var getCanvas = require('./Canvas');
-var getImage  = require('./Image');
+var getCanvas = require('./GetCanvas');
+var Image     = require('./Image');
 
 function renderImageToCanvas(swfObject, whenDone) {
 	if (swfObject.colorData) {
@@ -48,7 +48,7 @@ function inflate(strdata, onData) {
 function translateJpg(swfObject, whenDone) {
 	// Image creation
 	var uri = 'data:image/jpeg;base64,' + new Buffer(swfObject.data).toString('base64');
-	var image = getImage();
+	var image = new Image();
 	image.src = uri;
 
 	// Writing image into canvas in order to manipulate its pixels
