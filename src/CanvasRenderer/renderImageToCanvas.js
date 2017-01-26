@@ -1,8 +1,8 @@
 'use strict';
 
-var zlib   = require('zlib');
-var Canvas = require('./Canvas');
-var Image  = require('./Image');
+var zlib      = require('zlib');
+var getCanvas = require('./GetCanvas');
+var Image     = require('./Image');
 
 function renderImageToCanvas(swfObject, whenDone) {
 	if (swfObject.colorData) {
@@ -54,7 +54,7 @@ function translateJpg(swfObject, whenDone) {
 	// Writing image into canvas in order to manipulate its pixels
 	var width   = image.width;
 	var height  = image.height;
-	var canvas  = new Canvas(width, height);
+	var canvas  = getCanvas(width, height);
 	var context = canvas.getContext('2d');
 	context.drawImage(image, 0, 0);
 
@@ -85,7 +85,7 @@ function translateJpg(swfObject, whenDone) {
 function translatePng(swfObject, whenDone) {
 	var width  = swfObject.width;
 	var height = swfObject.height;
-	var canvas = new Canvas(width, height);
+	var canvas = getCanvas(width, height);
 	var context = canvas.getContext('2d');
 
 	var colorTableSize = swfObject.colorTableSize || 0;
@@ -128,7 +128,7 @@ function translatePng(swfObject, whenDone) {
 				pxData[pxIdx + 2] = data[idx + 2] * premultiplierInv;
 				pxData[pxIdx + 3] = alpha;
 			}
-			
+
 			cmIdx += 1;
 			pxIdx += 4;
 		}

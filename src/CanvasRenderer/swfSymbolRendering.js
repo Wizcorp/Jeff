@@ -1,5 +1,5 @@
 'use strict';
-var Canvas         = require('./Canvas');
+var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 var filters        = require('./filters');
 var blendModes     = require('./blendModes');
@@ -90,7 +90,7 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 	var tint           = animData.colors[frame];
 	var appliedFilters = animData.filters    ? animData.filters[frame]    : undefined;
 	var blendMode      = animData.blendModes ? animData.blendModes[frame] : undefined;
-	
+
 	var duration = symbol.duration || 1;
 	frame = frame % duration;
 
@@ -106,7 +106,7 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 
 	var localCanvas, localContext;
 	if (hasPixelManipulation) {
-		localCanvas  = new Canvas();
+		localCanvas  = getCanvas();
 		localContext = localCanvas.getContext('2d');
 
 		localCanvas.width  = globalCanvas.width;
@@ -130,7 +130,7 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 				// Masking
 
 				// Creating an intermediary canvas to apply the mask
-				var maskCanvas  = new Canvas();
+				var maskCanvas  = getCanvas();
 				var maskContext = maskCanvas.getContext('2d');
 
 				maskCanvas.width  = localCanvas.width;
@@ -138,7 +138,7 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 
 				this._renderSymbol(maskCanvas, maskContext, matrix, color, child, frame - child.frames[0], true);
 
-				var clipCanvas  = new Canvas();
+				var clipCanvas  = getCanvas();
 				var clipContext = clipCanvas.getContext('2d');
 
 				clipCanvas.width  = localCanvas.width;

@@ -1,5 +1,5 @@
 'use strict';
-var Canvas         = require('./Canvas');
+var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 
 // function transformInverse(m) {
@@ -97,7 +97,7 @@ function multiplyTransforms(t0, t1) {
 // Issue: border between fills of a unique drawing is transparent (not fully opaque)
 // it needs to be solved but changing the node canvas renderer to something
 // more efficient and reliable like a vectorial webgl renderer is being considered.
-// The problem is that this transparency issue will still occur. 
+// The problem is that this transparency issue will still occur.
 // Probably the getDoubleEdges function will stay but the fixDoubleEdges and getPixelsOnLine
 // functions will require a new implementation depending on the new renderer.
 
@@ -328,7 +328,7 @@ CanvasRenderer.prototype._fillShapes = function (context, canvas, shapes, transf
 	} else if (fill.type === 'pattern') {
 		matrix = fill.matrix;
 
-		var imgCanvas  = new Canvas();
+		var imgCanvas  = getCanvas();
 		var imgContext = imgCanvas.getContext('2d');
 		imgCanvas.width  = canvas.width;
 		imgCanvas.height = canvas.height;
