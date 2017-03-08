@@ -1,5 +1,5 @@
 'use strict';
-var Canvas          = require('./Canvas');
+var getCanvas       = require('./GetCanvas');
 var CanvasRenderer  = require('./main');
 var BoxPartitioning = require('./BoxPartitioning');
 
@@ -25,7 +25,7 @@ CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 	}
 	var sqrSide = Math.sqrt(totalArea);
 
-	// Populating list of graphics 
+	// Populating list of graphics
 	var graphics = [];
 	for (id in graphicDims) {
 		graphics.push(graphicDims[id]);
@@ -105,14 +105,14 @@ CanvasRenderer.prototype._renderAtlas = function (graphicCanvasses, graphicDims)
 	}
 
 	if (atlasDim.width === 0 || atlasDim.height === 0) {
-		var emptyCanvas = new Canvas();
+		var emptyCanvas = getCanvas();
 		emptyCanvas.width  = 0;
 		emptyCanvas.height = 0;
 		return emptyCanvas;
 	}
 
 	// Drawing each graphical element into atlas
-	var atlas   = new Canvas();
+	var atlas   = getCanvas();
 	var context = atlas.getContext('2d');
 
 	atlas.width  = this._options.powerOf2Images? nextHighestPowerOfTwo(atlasDim.width)  : atlasDim.width;
