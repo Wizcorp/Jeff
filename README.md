@@ -40,11 +40,31 @@ API:
 ```
 	var jeff = require('jeff');
 
+	// Writing extracted data in current folder
 	var options = {
-		source: 'mySwf.swf'
+		source: 'mySwf.swf',
+		outDir: '.'
 	};
 
 	jeff(options);
+
+
+	// Returning extracted data in a callback
+	var options = {
+		source: 'mySwf.swf',
+		returnData: true
+	};
+
+	jeff(options, function (error, stats, extractedData) {
+		// Uncovering convertion stats
+		var nbFilesConverted = stats.files;
+		var nbErrors         = stats.errors;
+
+		// Fetching extracted data
+		var imageNames = extractedData.imageNames;
+		var image      = extractedData.images;
+		var data       = extractedData.data;
+	});
 ```
 
 Here is a complete list of [Jeff's options](http://www.jeff.github.io).
