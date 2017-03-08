@@ -40,10 +40,9 @@ program
 .parse(process.argv);
 
 var exportParams = {
-
 	// Primary options
 	inputDir:           program.inputDir,
-	outDir:             program.outDir,
+	outDir:             program.outDir || '.', // By default, always writing to disk when JEFF used in command line
 	source:             program.source,
 
 	// Secondary options
@@ -73,4 +72,4 @@ var exportParams = {
 
 // Creating a new Jeff
 jeff(exportParams);
-// Waving good bye to Jeff
+// Waving Jeff good bye

@@ -52,55 +52,68 @@ function Jeff() {
 
 function JeffOptions(params) {
 	// Primary options
-	this.inputDir          = params.inputDir          || '.';
-	this.outDir            = params.outDir            || '.';
-	this.source            = params.source            || '*.swf';
+	this.inputDir            = params.inputDir            || '.';
+	this.outDir              = params.outDir              || null;
+	this.source              = params.source              || '*.swf';
 
 	// Secondary options
-	this.scope             = params.scope             || 'main';
-	this.renderFrames      = params.renderFrames      || false;
-	this.ratio             = params.ratio             || 1;
+	this.scope               = params.scope               || 'main';
+	this.renderFrames        = params.renderFrames        || false;
+	this.ratio               = params.ratio               || 1;
 
 	// Optimisation options
-	this.imageOptim        = params.imageOptim        || false;
-	this.imageQuality      = params.imageQuality      || 100;
-	this.createAtlas       = params.createAtlas       || false;
-	this.powerOf2Images    = params.powerOf2Images    || false;
-	this.maxImageDim       = params.maxImageDim       || 2048;
-	this.simplify          = params.simplify          || false;
-	this.beautify          = params.beautify          || false;
-	this.flatten           = params.flatten           || false;
-	this.compressMatrices  = params.compressMatrices  || false;
+	this.imageOptim          = params.imageOptim          || false;
+	this.imageQuality        = params.imageQuality        || 100;
+	this.createAtlas         = params.createAtlas         || false;
+	this.powerOf2Images      = params.powerOf2Images      || false;
+	this.maxImageDim         = params.maxImageDim         || 2048;
+	this.simplify            = params.simplify            || false;
+	this.beautify            = params.beautify            || false;
+	this.flatten             = params.flatten             || false;
+	this.compressMatrices    = params.compressMatrices    || false;
 
 	// Advanced options
-	this.exportAtRoot      = params.exportAtRoot      || false;
-	this.splitClasses      = params.splitClasses      || false;
-	this.ignoreImages      = params.ignoreImages      || false;
-	this.ignoreData        = params.ignoreData        || false;
-	this.filtering         = params.filtering         || 'linear';
-	this.outlineEmphasis   = params.outlineEmphasis   || 1;
+	this.exportAtRoot        = params.exportAtRoot        || false;
+	this.splitClasses        = params.splitClasses        || false;
+	this.ignoreImages        = params.ignoreImages        || false;
+	this.ignoreData          = params.ignoreData          || false;
+	this.minificationFilter  = params.minificationFilter  || 'linear';
+	this.magnificationFilter = params.magnificationFilter || 'linear';
+	this.outlineEmphasis     = params.outlineEmphasis     || 1;
 
 	// Advanced++ options
 	// Not usable as command line options
-	this.defaultGroupRatio = params.defaultGroupRatio || 1;
-	this.classGroups       = params.classGroups       || {};
-	this.fileGroups        = params.fileGroups        || {};
-	this.fileGroupRatios   = params.fileGroupRatios   || {};
-	this.attributeFilter   = params.attributeFilter;
-	this.classRatios       = params.classRatios;
-	this.container         = params.container;
-	this.ignoreExpression  = params.ignoreExpression;
-	this.ignoreList        = params.ignoreList;
-	this.removeList        = params.removeList;
-	this.exclusiveList     = params.exclusiveList;
-	this.postProcess       = params.postProcess;
-	this.customWriteFile   = params.customWriteFile;
-	this.customReadFile    = params.customReadFile;
-	this.fixedSize         = params.fixedSize;
+	this.defaultGroupRatio   = params.defaultGroupRatio   || 1;
+	this.classGroups         = params.classGroups         || {};
+	this.fileGroups          = params.fileGroups          || {};
+	this.fileGroupRatios     = params.fileGroupRatios     || {};
+	this.returnData          = params.returnData          || false;
+	this.attributeFilter     = params.attributeFilter;
+	this.attributeFilter     = params.attributeFilter;
+	this.classRatios         = params.classRatios;
+	this.container           = params.container;
+	this.ignoreExpression    = params.ignoreExpression;
+	this.ignoreList          = params.ignoreList;
+	this.removeList          = params.removeList;
+	this.exclusiveList       = params.exclusiveList;
+	this.postProcess         = params.postProcess;
+	this.customWriteFile     = params.customWriteFile;
+	this.customReadFile      = params.customReadFile;
+	this.fixedSize           = params.fixedSize;
 
 	// Whether only one frame is being rendered
 	// Boolean used for naming purpose
-	this.onlyOneFrame      = (this.renderFrames instanceof Array) && (this.renderFrames.length === 1);
+	this.onlyOneFrame = (this.renderFrames instanceof Array) && (this.renderFrames.length === 1);
+
+	if (this.outDir === null) {
+		// Returning data if output directory not specified
+		this.returnData = true;
+
+		this.writeToDisk = false;
+	} else {
+		// Writing to disk only if output directory is specified
+		this.writeToDisk = true;
+	}
 
 	// Checking for uncompatible options
 	if (this.renderFrames) {
@@ -123,6 +136,7 @@ function JeffOptions(params) {
 
 Jeff.prototype._init = function (options, cb) {
 	this._options = new JeffOptions(options);
+	this._extractedData = [];
 
 	// Making sure the input directory exists
 	if (!fs.existsSync(this._options.inputDir)) {
@@ -139,7 +153,9 @@ Jeff.prototype._init = function (options, cb) {
 	if (this._options.source instanceof Array) {
 		cb(this._options.source);
 	} else {
+		var self = this;
 		glob(this._options.source, { cwd: this._options.inputDir }, function (error, uris) {
+			console.error('uris', self._options.source, uris)
 			cb(uris);
 		})
 	}
@@ -172,7 +188,9 @@ Jeff.prototype._extractFileGroups = function (swfUris, endExtractionCb) {
 			}
 
 			console.log('Jeff Converted ' + nbFiles + ' swf files out of ' + swfUris.length + '. Failures: ' + nbErrors);
-			if (endExtractionCb) endExtractionCb(null, { files: nbFiles, errors: nbErrors });
+			if (endExtractionCb) {
+				endExtractionCb(null, { files: nbFiles, errors: nbErrors }, self._extractedData);
+			}
 		}
 	);
 };
@@ -292,6 +310,37 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 	);
 };
 
+Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, nextClassListCb) {
+	var imageNames = this._generateImageNames(imageList);
+	var data = this._generateExportData(graphicProperties, imageNames);
+	if (this._options.writeToDisk) {
+		this._writeImagesToDisk(imageList, imageNames);
+		this._writeDataToDisk(data);
+	}
+
+	if (this._options.returnData) {
+		this._extractedData.push({
+			imageNames: imageNames,
+			images: imageList,
+			data: data
+		});
+	}
+
+	nextClassListCb();
+};
+
+Jeff.prototype._generateImageNames = function (imageList) {
+	var imageNames = [];
+	if (this._options.ignoreImages) {
+		return imageNames;
+	}
+
+	for (var i = 0; i < imageList.length; i += 1) {
+		imageNames[i] = this._generateImageName(imageList[i].name);
+	}
+	return imageNames;
+};
+
 Jeff.prototype._generateImageName = function (imgName) {
 	var imgPath = this._fileGroupName;
 
@@ -314,28 +363,12 @@ Jeff.prototype._generateImageName = function (imgName) {
 	return imgPath + '.png';
 };
 
-Jeff.prototype._generateJsonFileName = function () {
-	var jsonPath = this._fileGroupName;
-
-	if (this._options.scope === 'classes') {
-		jsonPath = path.join(jsonPath, this._classGroupName);
+Jeff.prototype._writeImagesToDisk = function (imageList, imageNames) {
+	for (var i = 0; i < imageNames.length; i += 1) {
+		var imagePath = path.join(this._options.outDir, imageNames[i]);
+		this._canvasToPng(imagePath, imageList[i].img);
 	}
-
-	if (this._options.exportAtRoot) {
-		jsonPath = path.basename(jsonPath);
-	}
-
-	return path.join(this._options.outDir, jsonPath + '.json');
 };
-
-function writeFile(outputFileName, data, options) {
-	var subDir = path.dirname(outputFileName);
-	if (!fs.existsSync(subDir)) {
-		fs.mkdirsSync(subDir);
-	}
-
-	fs.writeFileSync(outputFileName, data, options);
-}
 
 Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	if (canvas.width === 0 || canvas.height === 0) {
@@ -360,46 +393,7 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	}
 };
 
-function rounding(key, val) {
-	if (typeof val === 'number') {
-		if (val === 0) return 0;
-		var powerOf10 = 1 + Math.max(Math.ceil(Math.log(Math.abs(val)) / Math.LN10), 2);
-		var roundCoef = Math.pow(10, powerOf10);
-		return Math.round(val * roundCoef) / roundCoef;
-	}
-	return val;
-}
-
-Jeff.prototype._dataToJson = function (jsonName, data) {
-	var jsonData = JSON.stringify(data, rounding);
-
-	if (this._options.beautify) {
-		jsonData = beautify(jsonData, { indent_size: 4 });
-	}
-
-	if (!this._options.customWriteFile || !this._options.customWriteFile(jsonName, jsonData, JSON_WRITE_OPTIONS)) {
-		writeFile(jsonName, jsonData, JSON_WRITE_OPTIONS);
-	}
-};
-
-Jeff.prototype._extractImages = function (imageList) {
-	if (this._options.ignoreImages) {
-		return;
-	}
-
-	var imageNames = [];
-	var nbImages = imageList.length;
-	for (var i = 0, nImages = nbImages; i < nImages; i += 1) {
-		var imageName = this._generateImageName(imageList[i].name);
-		var imagePath = path.join(this._options.outDir, imageName);
-		this._canvasToPng(imagePath, imageList[i].img);
-
-		imageNames[i] = imageName;
-	}
-	return imageNames;
-};
-
-Jeff.prototype._extractData = function (graphicProperties, imageNames) {
+Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 	// Constructing symbols data that will be included in the export
 	var exportSymbolsData;
 	if (this._options.renderFrames) {
@@ -424,22 +418,16 @@ Jeff.prototype._extractData = function (graphicProperties, imageNames) {
 		return;
 	}
 
-	if (this._options.flatten)          { exportSymbolsData = helper.flattenAnimations(exportSymbolsData); }
-	if (this._options.simplify)         { exportSymbolsData = helper.simplifyAnimation(exportSymbolsData); }
-	if (this._options.compressMatrices) { exportSymbolsData = helper.delocateMatrices(exportSymbolsData); }
-
-	var jsonFileName = this._generateJsonFileName();
-
 	// Constructing metadata of conversion properties (for importing purpose)
 	var exportProperties = {
-        app: 'https://www.npmjs.com/package/jeff',
-        version: '0.2.1', // TODO: fetch version number automatically from package.json
-        frameRate: 25,
-        scale: this._options.ratio,
-        filtering: this._options.filtering,
-        mipmapCompatible: this._options.powerOf2Images,
-        compressedMatrices: this._options.compressMatrices,
-        prerendered: this._options.renderFrames ? true : false
+		app: 'https://www.npmjs.com/package/jeff',
+		version: '0.2.2', // TODO: fetch version number automatically from package.json
+		frameRate: 25,
+		scale: this._options.ratio,
+		filtering: [this._options.minificationFilter, this._options.magnificationFilter],
+		mipmapCompatible: this._options.powerOf2Images,
+		compressedMatrices: this._options.compressMatrices,
+		prerendered: this._options.renderFrames ? true : false
 	};
 
 	if (imageNames.length === 1) {
@@ -449,16 +437,68 @@ Jeff.prototype._extractData = function (graphicProperties, imageNames) {
 	}
 
 	var exportData = {
-		symbols: exportSymbolsData,
 		meta: exportProperties
 	};
 
-	this._dataToJson(jsonFileName, exportData);
+	if (this._options.flatten)  { exportSymbolsData = helper.flattenAnimations(exportSymbolsData); }
+	if (this._options.simplify) { exportSymbolsData = helper.simplifyAnimation(exportSymbolsData); }
+	exportData.symbols = exportSymbolsData;
+
+	if (this._options.compressMatrices) {
+		var delocatedMatrices = helper.delocateMatrices(exportSymbolsData);
+		exportData.transforms = delocatedMatrices.transforms;
+		exportData.colors     = delocatedMatrices.colors;
+	}
+
+	return exportData;
 };
 
-Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, nextClassListCb) {
-	var imageNames = this._extractImages(imageList);
-	this._extractData(graphicProperties, imageNames);
-
-	nextClassListCb();
+Jeff.prototype._writeDataToDisk = function (data) {
+	var jsonFileName = this._generateJsonFileName();
+	this._dataToJson(jsonFileName, data);
 };
+
+Jeff.prototype._generateJsonFileName = function () {
+	var jsonPath = this._fileGroupName;
+
+	if (this._options.scope === 'classes') {
+		jsonPath = path.join(jsonPath, this._classGroupName);
+	}
+
+	if (this._options.exportAtRoot) {
+		jsonPath = path.basename(jsonPath);
+	}
+
+	return path.join(this._options.outDir, jsonPath + '.json');
+};
+
+function rounding(key, val) {
+	if (typeof val === 'number') {
+		if (val === 0) return 0;
+		var powerOf10 = 1 + Math.max(Math.ceil(Math.log(Math.abs(val)) / Math.LN10), 2);
+		var roundCoef = Math.pow(10, powerOf10);
+		return Math.round(val * roundCoef) / roundCoef;
+	}
+	return val;
+}
+
+Jeff.prototype._dataToJson = function (jsonName, data) {
+	var jsonData = JSON.stringify(data, rounding);
+
+	if (this._options.beautify) {
+		jsonData = beautify(jsonData, { indent_size: 4 });
+	}
+
+	if (!this._options.customWriteFile || !this._options.customWriteFile(jsonName, jsonData, JSON_WRITE_OPTIONS)) {
+		writeFile(jsonName, jsonData, JSON_WRITE_OPTIONS);
+	}
+};
+
+function writeFile(outputFileName, data, options) {
+	var subDir = path.dirname(outputFileName);
+	if (!fs.existsSync(subDir)) {
+		fs.mkdirsSync(subDir);
+	}
+
+	fs.writeFileSync(outputFileName, data, options);
+}

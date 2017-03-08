@@ -99,7 +99,7 @@ function delocateTransforms(symbols) {
 		}
 	}
 
-	var compressedSymbols = { symbols: symbols };
+	var compressedMatrices = {};
 	var current, previous;
 
 	var delocatedTransforms;
@@ -116,7 +116,7 @@ function delocateTransforms(symbols) {
 				previous = current;
 			}
 		}
-		compressedSymbols.transforms = delocatedTransforms;
+		compressedMatrices.transforms = delocatedTransforms;
 	}
 
 	var delocatedColors;
@@ -134,7 +134,7 @@ function delocateTransforms(symbols) {
 			}
 		}
 
-		compressedSymbols.colors = delocatedColors;
+		compressedMatrices.colors = delocatedColors;
 	}
 
 	// Final step: replacing transforms and colors in the animations
@@ -163,6 +163,6 @@ function delocateTransforms(symbols) {
 		}
 	}
 
-	return compressedSymbols;
+	return compressedMatrices;
 }
 module.exports = delocateTransforms;
