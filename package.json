@@ -1,7 +1,7 @@
 {
 	"name": "jeff",
 	"description": "Extracts Json meta-data and images from a SWF Flash file.",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"private": false,
 	"author": {
 		"name": "Brice Chevalier",

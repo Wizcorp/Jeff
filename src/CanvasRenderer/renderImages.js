@@ -213,10 +213,10 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 		var fixedSize = this._options.fixedSize;
 
 		if (symbol.isAnimation) {
-			var duration     = symbol.duration;
-			var animColors   = [];
-			var animMatrices = [];
-			var classAnim    = { id: classId, colors: animColors, matrices: animMatrices };
+			var duration       = symbol.duration;
+			var animColors     = [];
+			var animTransforms = [];
+			var classAnim      = { id: classId, colors: animColors, transforms: animTransforms };
 
 			var bounds = symbol.containerBounds || symbol.bounds;
 			if (!bounds) {
@@ -266,8 +266,8 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 					continue;
 				}
 
-				animColors[frame]   = identityColor;
-				animMatrices[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
+				animColors[frame]     = identityColor;
+				animTransforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
 				this._renderSymbol(canvas, context, identityMatrix, identityColor, classAnim, frame, false);
 
 				// TODO: find a more elegant way to deal with the 'only one frame' case: may be add an option to remove any suffix?
