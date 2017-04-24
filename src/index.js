@@ -6,8 +6,8 @@ var glob     = require('glob');
 var path     = require('path');
 var async    = require('async');
 var beautify = require('js-beautify').js_beautify;
-var pngquant = require('node-pngquant-native');
-var imgOptim = require('image-optim');
+// var pngquant = require('node-pngquant-native');
+// var imgOptim = require('image-optim');
 
 var helper         = require('./Helper/index.js');
 var SwfParser      = require('./Gordon/parser.js');
@@ -139,7 +139,7 @@ Jeff.prototype._init = function (options, cb) {
 	this._extractedData = [];
 
 	// Making sure the input directory exists
-	if (!fs.existsSync(this._options.inputDir)) {
+	if (this._options.outDir && !fs.existsSync(this._options.inputDir)) {
 		throw new Error('Directory not found: ' + this._options.inputDir);
 		return;
 	}
@@ -155,7 +155,6 @@ Jeff.prototype._init = function (options, cb) {
 	} else {
 		var self = this;
 		glob(this._options.source, { cwd: this._options.inputDir }, function (error, uris) {
-			console.error('uris', self._options.source, uris)
 			cb(uris);
 		})
 	}
@@ -381,14 +380,16 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	var png = new Buffer(url.substr(len), 'base64');
 
 	if (this._options.imageQuality < 100) {
-		png = pngquant.compress(png, { quality: [this._options.imageQuality, 100] });
+		// TODO
+		// png = pngquant.compress(png, { quality: [this._options.imageQuality, 100] });
 	}
 
 	if (!this._options.customWriteFile || !this._options.customWriteFile(pngName, png)) {
 		writeFile(pngName, png);
 
 		if (this._options.imageOptim) {
-			imgOptim.optimize(pngName, function() {})
+			// TODO
+			// imgOptim.optimize(pngName, function() {})
 		}
 	}
 };
