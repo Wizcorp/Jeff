@@ -315,7 +315,7 @@ Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, next
 	var data = this._generateExportData(graphicProperties, imageNames);
 	if (this._options.writeToDisk) {
 		this._writeImagesToDisk(imageList, imageNames);
-		if (data) {
+		if (!this._options.ignoreData) {
 			this._writeDataToDisk(data);
 		}
 	}
