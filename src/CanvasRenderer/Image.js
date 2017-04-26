@@ -5,7 +5,7 @@ var Image;
 if (typeof(window) !== 'undefined' && window.Image) {
 	Image = window.Image;
 } else {
-	var Canvas = require('./GetCanvas');
+	var Canvas = require('canvas');
 	Image = Canvas.Image;
 }
 
