@@ -221,10 +221,7 @@ module.exports = Stream;
 				// Edit: it looks like this hack is making the export fail on some swf
 				// (may be those from the latest flash versions?)
 				// So the bytes need to be tested in order to know whether the hack is necessary
-				var nextByte0 = this._buffer.slice(this.offset, this.offset + 1);
-				var nextByte1 = this._buffer.slice(this.offset, this.offset + 2);
-
-				if (nextByte0 === 0 && nextByte1 === 0) {
+				if (this._buffer.readUInt16LE(this.offset) === 0) {
 					var empty = this.readBytes(16); //console.warn('numBits=1, rect:',rect)
 					for(var i = 0; i < 16; i++) {
 						if(empty[i] !== 0) { throw new Error('Unexpected rectangle data'); }
