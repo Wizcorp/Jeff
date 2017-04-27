@@ -1,5 +1,10 @@
 # Release history
 
+## v0.2.6
+Fixed a bug with bitmap extraction
+Fixed a bug with empty rectangles parsing
+Added verbosity parameter and additional logs
+
 ## v0.2.5
 Fixed a bug when exporting with `ignoreData` parameter.
 
