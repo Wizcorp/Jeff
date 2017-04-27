@@ -212,6 +212,7 @@ Jeff.prototype._parseFileGroup = function (fileGroup, nextGroupCb) {
 };
 
 Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
+	console.log('parsing: ' + swfName);
 
 	var self = this;
 	var swfObjects = [];
