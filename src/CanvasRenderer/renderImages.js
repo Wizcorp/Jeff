@@ -80,22 +80,28 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 			h = bounds.bottom - bounds.top;
 
 			// Determining if the graphic consists exclusively in images
-			var shapes = graphic.shapes;
-			var s = 0;
-			while (rendersImage && s < shapes.length) {
-				var fills = shapes[s].fills;
-				var f = 1;
-				while (rendersImage && f < fills.length) {
-					if (fills[f].length >= 1) {
-						var fillStyle = fills[f][0].fillStyle;
-						rendersImage = fillStyle && (fillStyle.type === 'pattern');
+			if (graphic.isShape) {
+				var shapes = graphic.shapes;
+				var s = 0;
+				while (rendersImage && s < shapes.length) {
+					var fills = shapes[s].fills;
+					var f = 1;
+					while (rendersImage && f < fills.length) {
+						if (fills[f].length >= 1) {
+							var fillStyle = fills[f][0].fillStyle;
+							rendersImage = fillStyle && (fillStyle.type === 'pattern');
+						}
+						f += 1;
 					}
-					f += 1;
+					s += 1;
 				}
-				s += 1;
+			} else {
+				// TODO: if an element is not renderable it should not be in the list of symbols to export
+				if (this._options.verbosity >= 3) {
+					console.warn('[CanvasRenderer._setGraphicDimensions] Graphic ' + graphic.id + ' is empty');
+				}
 			}
 		}
-
 
 		// Computing graphic ratio for rendering
 		var graphicRatio = this._extractor._fileGroupRatio;
