@@ -95,9 +95,13 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 					}
 					s += 1;
 				}
+			} else {
+				// TODO: if an element is not renderable it should not be in the list of symbols to export
+				if (this._options.verbosity >= 3) {
+					console.warn('[CanvasRenderer._setGraphicDimensions] Graphic ' + graphic.id + ' is empty');
+				}
 			}
 		}
-
 
 		// Computing graphic ratio for rendering
 		var graphicRatio = this._extractor._fileGroupRatio;
