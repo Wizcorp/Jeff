@@ -80,7 +80,7 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 			h = bounds.bottom - bounds.top;
 
 			// Determining if the graphic consists exclusively in images
-			if (graphic.shapes) {
+			if (graphic.isShape) {
 				var shapes = graphic.shapes;
 				var s = 0;
 				while (rendersImage && s < shapes.length) {
