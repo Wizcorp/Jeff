@@ -100,6 +100,8 @@ function JeffOptions(params) {
 	this.customWriteFile     = params.customWriteFile;
 	this.customReadFile      = params.customReadFile;
 	this.fixedSize           = params.fixedSize;
+	// 1: minimal log level, 10: maximum log level. TODO: needs to be implemented on every console.warn/log/error
+	this.verbosity           = params.verbosity           || 3;
 
 	// Whether only one frame is being rendered
 	// Boolean used for naming purpose
@@ -211,7 +213,9 @@ Jeff.prototype._parseFileGroup = function (fileGroup, nextGroupCb) {
 };
 
 Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
-
+	if (this._options.verbosity >= 5) {
+		console.log('parsing: ' + swfName);
+	}
 	var self = this;
 	var swfObjects = [];
 	function onFileRead(error, swfData) {
@@ -314,7 +318,9 @@ Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, next
 	var data = this._generateExportData(graphicProperties, imageNames);
 	if (this._options.writeToDisk) {
 		this._writeImagesToDisk(imageList, imageNames);
-		this._writeDataToDisk(data);
+		if (!this._options.ignoreData) {
+			this._writeDataToDisk(data);
+		}
 	}
 
 	if (this._options.returnData) {

@@ -1,5 +1,23 @@
 # Release history
 
+## v0.2.6
+Fixed a bug with bitmap extraction
+Fixed a bug with empty rectangles parsing
+Added verbosity parameter and additional logs
+
+## v0.2.5
+Fixed a bug when exporting with `ignoreData` parameter.
+
+## v0.2.4
+
+## v0.2.3
+
+## v0.2.2
+
+## v0.2.1
+
+## v0.2.0
+
 ## v0.1.11
 Fixed empty rectangle hack in gordon
 
