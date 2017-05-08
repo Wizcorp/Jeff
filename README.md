@@ -23,59 +23,21 @@ Very good scalability: usable in command line or through the API it can be used 
 Made in [Wizcorp](http://www.wizcorp.jp).
 
 ## Install
-For use as a command line:
+Go into JEFF directory and do:
 
-	`npm install jeff -g`
-
-For use as an api:
-
-	`npm install jeff`
-
+	```
+	> npm install electron -g
+	> npm install
+	```
 
 ## Use
-Command line:
-	`jeff -s mySwf.swf`
+Go into JEFF directory and do:
+	`electron . -s mySwf.swf -o outputPath`
 
-API:
-```javascript
-var jeff = require('jeff');
-
-// Writing extracted data in current folder
-var options = {
-	source: 'mySwf.swf',
-	outDir: '.'
-};
-
-jeff(options);
+You can see all available options [here](https://github.com/Wizcorp/Jeff/blob/electron/bin/jeff).
 
 
-// Returning extracted data in a callback
-var options = {
-	source: 'mySwf.swf',
-	returnData: true
-};
-
-jeff(options, function (error, stats, extractedData) {
-	// Uncovering convertion stats
-	var nbFilesConverted = stats.files;
-	var nbErrors         = stats.errors;
-
-	// Fetching extracted data
-	var imageNames = extractedData.imageNames;
-	var image      = extractedData.images;
-	var data       = extractedData.data;
-});
-```
-
-Here is a complete list of [Jeff's options](http://www.jeff.github.io).
-
-### Operation
-
-* Will parse the input directory to find SWF files corresponding to the given source file pattern.
-* Will sequentially parse and process the SWF files.
-* Will export JSON meta-data and images corresponding to the SWF files.
-
-### Roadmap for unsupported features
+## Roadmap for unsupported features
 * Texts (Static/Dynamic)
 * Buttons
 * Embedded fonts
@@ -87,3 +49,6 @@ Here is a complete list of [Jeff's options](http://www.jeff.github.io).
 * Option to extract meta-data under keyframe based format (as opposed to per frame transformation matrix)
 
 For contributors, see [Swf File Format Specifications](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/swf/pdf/swf-file-format-spec.pdf)
+
+## Remarks
+Unlike the master branch, image compression is not supported at the moment.
