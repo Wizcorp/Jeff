@@ -2,3 +2,4 @@ test
 test-output
 npm-debug.log
 node_modules
+.DS_Store
