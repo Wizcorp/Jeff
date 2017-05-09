@@ -25,10 +25,10 @@ Made in [Wizcorp](http://www.wizcorp.jp).
 ## Install
 Go into JEFF directory and do:
 
-	```
-	> npm install electron -g
-	> npm install
-	```
+```
+> npm install electron -g
+> npm install
+```
 
 ## Use
 Go into JEFF directory and do:
@@ -51,4 +51,4 @@ You can see all available options [here](https://github.com/Wizcorp/Jeff/blob/el
 For contributors, see [Swf File Format Specifications](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/swf/pdf/swf-file-format-spec.pdf)
 
 ## Remarks
-Unlike the master branch, image compression is not supported at the moment.
+Unlike the master branch, generated images are not compressed.
