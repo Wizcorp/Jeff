@@ -8,7 +8,7 @@ function GetCanvas(width, height) {
 	if (typeof(window) !== 'undefined' && typeof(document) !== 'undefined' && typeof(document.createElement) !== 'undefined') {
 		Canvas = document.createElement('canvas');
 		Canvas.width = w;
-		Canvas.h = h;
+		Canvas.height = h;
 		return Canvas;
 	} else {
 		Canvas = require('canvas');
