@@ -79,8 +79,6 @@ jeff(options, function (error, stats, extractedData) {
 });
 ```
 
-Here is a complete list of [Jeff's options](http://www.jeff.github.io).
-
 ### Operation
 
 * Will parse the input directory to find SWF files corresponding to the given source file pattern.
