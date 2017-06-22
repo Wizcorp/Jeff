@@ -1,12 +1,19 @@
 # Release history
 
+## v0.2.8
+Fixed artefacts/glitches when using a texture generated with both options "createAtlas" and "renderFrames"
+
+## v0.2.7
+Fixed a bug when a graphic has no shapes
+Added a verbosity level option
+
 ## v0.2.6
 Fixed a bug with bitmap extraction
 Fixed a bug with empty rectangles parsing
 Added verbosity parameter and additional logs
 
 ## v0.2.5
-Fixed a bug when exporting with `ignoreData` parameter.
+Fixed a bug when exporting with `ignoreData` parameter
 
 ## v0.2.4
 
