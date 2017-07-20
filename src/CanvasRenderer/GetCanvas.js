@@ -11,7 +11,7 @@ function GetCanvas(width, height) {
 		Canvas.h = h;
 		return Canvas;
 	} else {
-		Canvas = require('canvas');
+		Canvas = require('canvas-prebuilt');
 		return new Canvas(w, h);
 	}
 }

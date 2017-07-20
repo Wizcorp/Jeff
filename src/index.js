@@ -6,8 +6,6 @@ var glob     = require('glob');
 var path     = require('path');
 var async    = require('async');
 var beautify = require('js-beautify').js_beautify;
-var pngquant = require('node-pngquant-native');
-var imgOptim = require('image-optim');
 
 var helper         = require('./Helper/index.js');
 var SwfParser      = require('./Gordon/parser.js');
@@ -41,8 +39,14 @@ function Jeff() {
 	this._fileGroupRatio         = undefined; // Export ratio
 	this._swfObjectsPerFileGroup = undefined; // Array holding swf objects per file
 	this._swfObjects             = undefined; // Merged swf objects
+
 	this._symbolList             = undefined; // List of symbols to extract
+	this._spriteList             = undefined;
+	this._itemList               = undefined;
+
 	this._symbols                = undefined; // Symbols corresponding to the swfObjects
+	this._sprites                = undefined;
+	this._items                  = undefined;
 
 	// Parameters applying to the class group being processed
 	this._classGroupName         = undefined; // Name
@@ -62,15 +66,12 @@ function JeffOptions(params) {
 	this.ratio               = params.ratio               || 1;
 
 	// Optimisation options
-	this.imageOptim          = params.imageOptim          || false;
-	this.imageQuality        = params.imageQuality        || 100;
 	this.createAtlas         = params.createAtlas         || false;
 	this.powerOf2Images      = params.powerOf2Images      || false;
 	this.maxImageDim         = params.maxImageDim         || 2048;
 	this.simplify            = params.simplify            || false;
 	this.beautify            = params.beautify            || false;
 	this.flatten             = params.flatten             || false;
-	this.compressMatrices    = params.compressMatrices    || false;
 
 	// Advanced options
 	this.exportAtRoot        = params.exportAtRoot        || false;
@@ -88,7 +89,6 @@ function JeffOptions(params) {
 	this.fileGroups          = params.fileGroups          || {};
 	this.fileGroupRatios     = params.fileGroupRatios     || {};
 	this.returnData          = params.returnData          || false;
-	this.attributeFilter     = params.attributeFilter;
 	this.attributeFilter     = params.attributeFilter;
 	this.classRatios         = params.classRatios;
 	this.container           = params.container;
@@ -127,11 +127,6 @@ function JeffOptions(params) {
 		if (this.flatten) {
 			this.flatten = false;
 			// console.warn('[Jeff] Option to flatten will be ignored');
-		}
-
-		if (this.compressMatrices) {
-			this.compressMatrices = false;
-			// console.warn('[Jeff] Option to compress matrices will be ignored');
 		}
 	}
 }
@@ -282,7 +277,7 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 	// Merging symbols in swfObjectsPerGroup with respect to their priorities (the lower the index the higher the priority)
 	var swfObjects = helper.groupSwfObjects(this._swfObjectsPerFileGroup);
 	var allClasses = helper.getClasses(swfObjects, exportMain);
-	var symbols    = processSwf(swfObjects, allClasses, this);
+	var items      = processSwf(swfObjects, allClasses, this);
 
 	// Generating a list of classes to export with respect to options
 	var classList;
@@ -296,17 +291,29 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 	var classGroups = helper.groupClasses(classList, this._options.classGroups, this._options.splitClasses);
 
 	this._swfObjects = swfObjects;
-	this._symbols    = symbols;
+	this._symbols    = items.symbols;
+	this._sprites    = items.sprites;
+	this._items      = items.itemsById;
 
 	var self = this;
 	async.eachSeries(classGroups,
 		function (classGroup, nextClassListCb) {
 			self._classGroupName = classGroup.name;
 			self._classGroupList = classGroup.list;
-			self._symbolList = helper.generateExportList(self._symbols, self._classGroupList, self._options.attributeFilter);
+			self._itemList = helper.generateExportList(self._items, self._classGroupList, self._options.attributeFilter);
+			self._symbolList = [];
+			self._spriteList = [];
+			for (var i = 0; i < self._itemList.length; i += 1) {
+				var itemId = self._itemList[i];
+				if (self._symbols[itemId]) {
+					self._symbolList.push(itemId);
+				} else if (self._sprites[itemId]) {
+					self._spriteList.push(itemId);
+				}
+			}
 			self._renderer.renderSymbols(self,
-				function (imageList, graphicProperties) {
-					self._extractClassGroup(imageList, graphicProperties, nextClassListCb);
+				function (imageMap, spriteProperties) {
+					self._extractClassGroup(imageMap, spriteProperties, nextClassListCb);
 				}
 			);
 		},
@@ -314,11 +321,11 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 	);
 };
 
-Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, nextClassListCb) {
-	var imageNames = this._generateImageNames(imageList);
-	var data = this._generateExportData(graphicProperties, imageNames);
+Jeff.prototype._extractClassGroup = function (imageMap, spriteProperties, nextClassListCb) {
+	var imageNames = this._generateImageNames(imageMap);
+	var data = this._generateExportData(spriteProperties, imageNames);
 	if (this._options.writeToDisk) {
-		this._writeImagesToDisk(imageList, imageNames);
+		this._writeImagesToDisk(imageMap, imageNames);
 		if (!this._options.ignoreData) {
 			this._writeDataToDisk(data);
 		}
@@ -327,7 +334,7 @@ Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, next
 	if (this._options.returnData) {
 		this._extractedData.push({
 			imageNames: imageNames,
-			images: imageList,
+			images: imageMap,
 			data: data
 		});
 	}
@@ -335,14 +342,14 @@ Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, next
 	nextClassListCb();
 };
 
-Jeff.prototype._generateImageNames = function (imageList) {
-	var imageNames = [];
+Jeff.prototype._generateImageNames = function (imageMap) {
+	var imageNames = {};
 	if (this._options.ignoreImages) {
 		return imageNames;
 	}
 
-	for (var i = 0; i < imageList.length; i += 1) {
-		imageNames[i] = this._generateImageName(imageList[i].name);
+	for (var id in imageMap) {
+		imageNames[id] = this._generateImageName(id);
 	}
 	return imageNames;
 };
@@ -369,10 +376,10 @@ Jeff.prototype._generateImageName = function (imgName) {
 	return imgPath + '.png';
 };
 
-Jeff.prototype._writeImagesToDisk = function (imageList, imageNames) {
-	for (var i = 0; i < imageNames.length; i += 1) {
-		var imagePath = path.join(this._options.outDir, imageNames[i]);
-		this._canvasToPng(imagePath, imageList[i].img);
+Jeff.prototype._writeImagesToDisk = function (imageMap, imageNames) {
+	for (var id in imageMap) {
+		var imagePath = path.join(this._options.outDir, imageNames[id]);
+		this._canvasToPng(imagePath, imageMap[id]);
 	}
 };
 
@@ -386,26 +393,18 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	var len = header.length;
 	var png = new Buffer(url.substr(len), 'base64');
 
-	if (this._options.imageQuality < 100) {
-		png = pngquant.compress(png, { quality: [this._options.imageQuality, 100] });
-	}
-
 	if (!this._options.customWriteFile || !this._options.customWriteFile(pngName, png)) {
 		writeFile(pngName, png);
-
-		if (this._options.imageOptim) {
-			imgOptim.optimize(pngName, function() {})
-		}
 	}
 };
 
-Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
+Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	// Constructing symbols data that will be included in the export
-	var exportSymbolsData;
+	var exportItemsData;
 	if (this._options.renderFrames) {
-		exportSymbolsData = helper.generateFrameByFrameData(this._symbols, this._symbolList, graphicProperties, this._options.onlyOneFrame);
+		exportItemsData = helper.generateFrameByFrameData(this._symbols, this._symbolList, spriteProperties, this._options.onlyOneFrame);
 	} else {
-		exportSymbolsData = helper.generateMetaData(this._symbols, this._symbolList, graphicProperties);
+		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, this._symbols, this._symbolList, spriteProperties, this._options.createAtlas);
 	}
 
 	// Applying post-process, if any
@@ -413,10 +412,10 @@ Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 		if (this._options.postProcess instanceof Array) {
 			var nProcesses = this._options.postProcess.length;
 			for (var p = 0; p < nProcesses; p += 1) {
-				this._options.postProcess[p](exportSymbolsData, this._symbols);
+				this._options.postProcess[p](exportItemsData, this._items, this._symbols, this._sprites);
 			}
 		} else {
-			this._options.postProcess(exportSymbolsData, this._symbols);
+			this._options.postProcess(exportItemsData, this._items, this._symbols, this._sprites);
 		}
 	}
 
@@ -425,36 +424,26 @@ Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 	}
 
 	// Constructing metadata of conversion properties (for importing purpose)
-	var exportProperties = {
-		app: 'https://www.npmjs.com/package/jeff',
-		version: '0.2.2', // TODO: fetch version number automatically from package.json
-		frameRate: 25,
-		scale: this._options.ratio,
-		filtering: [this._options.minificationFilter, this._options.magnificationFilter],
-		mipmapCompatible: this._options.powerOf2Images,
-		compressedMatrices: this._options.compressMatrices,
-		prerendered: this._options.renderFrames ? true : false
-	};
-
-	if (imageNames.length === 1) {
-		exportProperties.image = imageNames[0];
-	} else {
-		exportProperties.images = imageNames;
-	}
-
 	var exportData = {
-		meta: exportProperties
+		meta: {
+			app: 'https://www.npmjs.com/package/jeff',
+			version: '0.3.0', // TODO: fetch version number automatically from package.json
+			frameRate: 25,
+			scale: this._options.ratio,
+			filtering: [this._options.minificationFilter, this._options.magnificationFilter],
+			mipmapCompatible: this._options.powerOf2Images,
+			prerendered: this._options.renderFrames ? true : false,
+			images: imageNames
+		}
 	};
 
-	if (this._options.flatten)  { exportSymbolsData = helper.flattenAnimations(exportSymbolsData); }
-	if (this._options.simplify) { exportSymbolsData = helper.simplifyAnimation(exportSymbolsData); }
-	exportData.symbols = exportSymbolsData;
+	var nbItems = this._items.length;
+	// if (this._options.flatten)  { helper.flattenAnimations(exportItemsData); }
+	if (this._options.simplify) { helper.simplifyAnimation(exportItemsData, nbItems); }
+	exportData.symbols = exportItemsData.symbols;
+	exportData.sprites = exportItemsData.sprites;
 
-	if (this._options.compressMatrices) {
-		var delocatedMatrices = helper.delocateMatrices(exportSymbolsData);
-		exportData.transforms = delocatedMatrices.transforms;
-		exportData.colors     = delocatedMatrices.colors;
-	}
+	helper.delocateMatrices(exportData);
 
 	return exportData;
 };

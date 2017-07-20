@@ -1,27 +1,28 @@
 'use strict';
 
-function flattenInstance(symbols, instance, unflattenedSymbols) {
+function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 	/* jshint maxstatements: 100 */
-	var id     = instance.id;
-	var symbol = symbols[id];
+	var id = instance.id;
+	if (sprites[id]) {
+		return [JSON.parse(JSON.stringify(instance))];
+	}
 
+	var symbol = symbols[id];
 	if (!symbol) {
 		return [];
 	}
 
 	var c, children;
-	if (!symbol.isAnimation || symbol.className || Object.keys(instance).length > 4) {
+	if (symbol.className || Object.keys(instance).length > 4) {
 		// Anything that is different from an animation or that is more than an animation cannot be flattened
 		var flattenedInstance = JSON.parse(JSON.stringify(instance));
-		if (symbol.isAnimation) {
-			children = symbol.children;
-			var newChildren = [];
-			for (c = 0; c < children.length; c += 1) {
-				Array.prototype.push.apply(newChildren, flattenInstance(symbols, children[c], unflattenedSymbols));
-			}
-			symbol.children = newChildren;
-			unflattenedSymbols.push(symbol);
+		children = symbol.children;
+		var newChildren = [];
+		for (c = 0; c < children.length; c += 1) {
+			Array.prototype.push.apply(newChildren, flattenInstance(symbols, sprites, children[c], symbolListFlat));
 		}
+		symbol.children = newChildren;
+		symbolListFlat[id] = symbol;
 		return [flattenedInstance];
 	}
 
@@ -32,7 +33,7 @@ function flattenInstance(symbols, instance, unflattenedSymbols) {
 	var tmpChildren = [];
 	children = symbol.children;
 	for (c = 0; c < children.length; c += 1) {
-		Array.prototype.push.apply(tmpChildren, flattenInstance(symbols, children[c], unflattenedSymbols));
+		Array.prototype.push.apply(tmpChildren, flattenInstance(symbols, sprites, children[c], symbolListFlat));
 	}
 
 	if (tmpChildren.length === 0) {
@@ -46,21 +47,21 @@ function flattenInstance(symbols, instance, unflattenedSymbols) {
 	var rm0, gm0, bm0, am0, ra0, ga0, ba0, aa0;
 	var rm1, gm1, bm1, am1, ra1, ga1, ba1, aa1;
 
-	var instanceDuration  = instance.frames[1] - instance.frames[0] + 1;
-	var symbolDuration    = symbol.duration;
-	var flattenedChildren = [];
+	var instanceFrameCount = instance.frames[1] - instance.frames[0] + 1;
+	var symbolFrameCount   = symbol.frameCount;
+	var flattenedChildren  = [];
 	for (c = 0; c < tmpChildren.length; c += 1) {
 		var childInstance = tmpChildren[c];
 
 		var childTransforms = childInstance.transforms;
 		var childColors     = childInstance.colors;
-		var childDuration   = childInstance.frames[1] - childInstance.frames[0] + 1;
+		var childFrameCount   = childInstance.frames[1] - childInstance.frames[0] + 1;
 
 		var newTransforms   = [];
 		var newColors       = [];
 		var firstFrameChild = 0;
 
-		for (var f = 0; f < instanceDuration; f += 1) {
+		for (var f = 0; f < instanceFrameCount; f += 1) {
 
 			// parent transformation
 			var transform = transforms[f];
@@ -83,8 +84,8 @@ function flattenInstance(symbols, instance, unflattenedSymbols) {
 			aa0 = color[7];
 
 			// child transformation
-			var childFrame = f % symbolDuration - childInstance.frames[0];
-			if (childFrame < 0 || childDuration <= childFrame) {
+			var childFrame = f % symbolFrameCount - childInstance.frames[0];
+			if (childFrame < 0 || childFrameCount <= childFrame) {
 				if (newTransforms.length > 0) {
 					var flattenedChild = JSON.parse(JSON.stringify(childInstance));
 					flattenedChild.transforms = newTransforms;
@@ -155,8 +156,14 @@ function flattenInstance(symbols, instance, unflattenedSymbols) {
 	return flattenedChildren;
 }
 
-function flattenAnimations(symbols) {
+function flattenAnimations(itemsData) {
+
+	var symbols = itemsData.symbols;
+	var sprites = itemsData.sprites;
+
 	var symbolListFlat = {};
+	itemsData.symbols = symbolListFlat;
+
 	var id, symbol;
 
 	// Making list of classes
@@ -166,30 +173,20 @@ function flattenAnimations(symbols) {
 		if (symbol.className) {
 			classes[id] = symbol;
 		}
-
-		if (!symbol.isAnimation) {
-			symbolListFlat[id] = symbol;
-		}
 	}
 
-	var unflattenedSymbols = [];
+	// var unflattenedSymbols = [];
 	for (id in classes) {
 		symbol = symbols[id];
-		var children    = symbol.children;
+		var children = symbol.children;
 		var newChildren = [];
 		for (var c = 0; c < children.length; c += 1) {
-			Array.prototype.push.apply(newChildren, flattenInstance(symbols, children[c], unflattenedSymbols));
+			Array.prototype.push.apply(newChildren, flattenInstance(symbols, sprites, children[c], symbolListFlat));
 		}
 		symbol.children = newChildren;
 		symbolListFlat[id] = symbol;
 	}
 
-	var nUnflattenedSymbols = unflattenedSymbols.length;
-	for (var s = 0; s < nUnflattenedSymbols; s += 1) {
-		symbol = unflattenedSymbols[s];
-		symbolListFlat[symbol.id] = symbol;
-	}
-
-	return symbolListFlat;
 }
+
 module.exports = flattenAnimations;

@@ -5,8 +5,8 @@ var CanvasRenderer = require('./main');
 // margin between assets in atlasmaps
 var MARGIN = 1;
 
-CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
-	var graphicsMaxDims = {};
+CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
+	var spritesMaxDims = {};
 	var classRatios     = this._options.classRatios || {};
 	var hasFixedSize    = this._options.fixedSize !== undefined;
 
@@ -36,40 +36,39 @@ CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
 	}
 
 	var maxDimForClass, classRatio;
-	for (var id in graphics) {
-		var graphic   = graphics[id];
+	for (var id in sprites) {
+		var sprite   = sprites[id];
 		var maxWidth  = 0;
 		var maxHeight = 0;
-		var maxDims   = graphic.maxDims;
+		var maxDims   = sprite.maxDims;
 		for (var className in this._extractor._classGroupList) {
 
 			maxDimForClass = maxDims[className];
-			classRatio = classRatios[className] || 1;
-
 			if (maxDimForClass) {
+				classRatio = classRatios[className] || 1;
 				maxWidth  = Math.max(maxWidth,  classRatio * maxDimForClass.width);
 				maxHeight = Math.max(maxHeight, classRatio * maxDimForClass.height);
 			}
 		}
 
-		graphicsMaxDims[id] = { width: maxWidth, height: maxHeight };
+		spritesMaxDims[id] = { width: maxWidth, height: maxHeight };
 	}
 
-	return graphicsMaxDims;
+	return spritesMaxDims;
 };
 
-CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxDims) {
+CanvasRenderer.prototype._setSpriteDimensions = function (sprites, spriteMaxDims) {
 
-	var graphicDims = {};
-	for (var id in graphics) {
-		var graphic = graphics[id];
+	var spriteDims = {};
+	for (var id in sprites) {
+		var sprite = sprites[id];
 
 		// Computing element dimension before scaling to ratio
-		var bounds = graphic.bounds[0];
+		var bounds = sprite.bounds[0];
 
 		var x, y, w, h;
 		var rendersImage = true;
-		if (graphic.isImage) {
+		if (sprite.isImage) {
 			var image = this._images[id];
 			x = 0;
 			y = 0;
@@ -81,9 +80,9 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 			w = bounds.right  - bounds.left;
 			h = bounds.bottom - bounds.top;
 
-			// Determining if the graphic consists exclusively in images
-			if (graphic.isShape) {
-				var shapes = graphic.shapes;
+			// Determining if the sprite consists exclusively in images
+			if (sprite.isShape) {
+				var shapes = sprite.shapes;
 				var s = 0;
 				while (rendersImage && s < shapes.length) {
 					var fills = shapes[s].fills;
@@ -100,103 +99,102 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 			} else {
 				// TODO: if an element is not renderable it should not be in the list of symbols to export
 				if (this._options.verbosity >= 3) {
-					console.warn('[CanvasRenderer._setGraphicDimensions] Graphic ' + graphic.id + ' is empty');
+					console.warn('[CanvasRenderer._setSpriteDimensions] sprite ' + sprite.id + ' is empty');
 				}
 			}
 		}
 
-		// Computing graphic ratio for rendering
-		var graphicRatio = this._extractor._fileGroupRatio;
+		// Computing sprite ratio for rendering
+		var spriteRatio = this._extractor._fileGroupRatio;
 
 		// Reducing the size of the element if it is bigger than the maximum allowed dimension
-		var graphicMaxDim = graphicMaxDims[id];
-		var maxWidth  = rendersImage ? w : graphicMaxDim.width;
-		var maxHeight = rendersImage ? h : graphicMaxDim.height;
+		var spriteMaxDim = spriteMaxDims[id];
+		var maxWidth  = rendersImage ? w : spriteMaxDim.width;
+		var maxHeight = rendersImage ? h : spriteMaxDim.height;
 
-		var graphicWidth;
-		var graphicHeight;
+		var spriteWidth;
+		var spriteHeight;
 		if (maxWidth === 0 || maxHeight === 0) {
-			graphicRatio  = 0;
-			graphicWidth  = 1;
-			graphicHeight = 1;
+			spriteRatio  = 0;
+			spriteWidth  = 1;
+			spriteHeight = 1;
 		} else {
 			var widthRatio   = w / maxWidth;
 			var heightRatio  = h / maxHeight;
 
 			if (widthRatio > heightRatio) {
-				graphicRatio /= widthRatio;
+				spriteRatio /= widthRatio;
 			} else {
-				graphicRatio /= heightRatio;
+				spriteRatio /= heightRatio;
 			}
 
-			graphicWidth  = Math.ceil(w * graphicRatio);
-			graphicHeight = Math.ceil(h * graphicRatio);
+			spriteWidth  = Math.ceil(w * spriteRatio);
+			spriteHeight = Math.ceil(h * spriteRatio);
 
-			var ratioToMaxDim = Math.sqrt((this._options.maxImageDim * this._options.maxImageDim) / (graphicWidth * graphicHeight));
+			var ratioToMaxDim = Math.sqrt((this._options.maxImageDim * this._options.maxImageDim) / (spriteWidth * spriteHeight));
 			if (ratioToMaxDim < 1) {
-				graphicWidth  *= ratioToMaxDim;
-				graphicHeight *= ratioToMaxDim;
-				graphicRatio  *= ratioToMaxDim;
+				spriteWidth  *= ratioToMaxDim;
+				spriteHeight *= ratioToMaxDim;
+				spriteRatio  *= ratioToMaxDim;
 			}
 		}
 
 		// Saving element position and dimension in the atlas
-		graphicDims[id] = {
+		spriteDims[id] = {
 			x:  x,
 			y:  y,
 			w:  w,
 			h:  h,
 			sx: 0,
 			sy: 0,
-			sw: graphicWidth,
-			sh: graphicHeight,
-			dx: x * graphicRatio,
-			dy: y * graphicRatio,
-			ratio:  graphicRatio,
+			sw: spriteWidth,
+			sh: spriteHeight,
+			dx: x * spriteRatio,
+			dy: y * spriteRatio,
+			ratio:  spriteRatio,
 			margin: MARGIN
 		};
 	}
 
-	return graphicDims;
+	return spriteDims;
 };
 
-function getGraphicsToRender(symbols, symbolList, images) {
-	var graphics = {};
-	for (var s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
-		if (symbol.isGraphic) {
-			if (symbol.isImage) {
-				var image = images[symbolId];
-				if (!image) {
-					console.warn('[CanvasRenderer.getGraphicsToRender] Graphic image not rendered', symbolId);
-					continue;
-				}
+CanvasRenderer.prototype._getSpritesToRender = function () {
+	var sprites = this._extractor._sprites;
+	var spriteList = this._extractor._spriteList;
+	var images = this._images;
+	var spritesToRender = {};
+	for (var s = 0; s < spriteList.length; s += 1) {
+		var spriteId = spriteList[s];
+		var sprite   = sprites[spriteId];
+		if (sprite.isImage) {
+			var image = images[spriteId];
+			if (!image) {
+				console.warn('[CanvasRenderer.getSpritesToRender] sprite image not rendered', spriteId);
+				continue;
 			}
-			graphics[symbolId] = symbol;
 		}
+		spritesToRender[spriteId] = sprite;
 	}
-	return graphics;
+	return spritesToRender;
 }
-var nBytes = 0;
-CanvasRenderer.prototype._renderGraphics = function (graphics, graphicDims, canvasses) {
-	for (var id in graphics) {
+
+CanvasRenderer.prototype._renderSprites = function (sprites, spriteDims, canvasses) {
+	for (var id in sprites) {
 		var canvas  = getCanvas();
 		var context = canvas.getContext('2d');
 
-		var graphic    = graphics[id];
-		var dimensions = graphicDims[id];
+		var sprite    = sprites[id];
+		var dimensions = spriteDims[id];
 
 		canvas.width  = dimensions.sw;
 		canvas.height = dimensions.sh;
-		nBytes += canvas.width * canvas.height * 4;
-
-		if (graphic.isShape) {
+		if (sprite.isShape) {
 			var transform = [dimensions.ratio, 0, 0, dimensions.ratio, - dimensions.dx, - dimensions.dy];
-			this._drawShapes(graphic.shapes, canvas, context, transform);
+			this._drawShapes(sprite.shapes, canvas, context, transform);
 		}
 
-		if (graphic.isImage) {
+		if (sprite.isImage) {
 			var image = this._images[id];
 			if (!image) {
 				continue;
@@ -209,7 +207,7 @@ CanvasRenderer.prototype._renderGraphics = function (graphics, graphicDims, canv
 	}
 };
 
-CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties) {
+CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) {
 	var identityMatrix = [1, 0, 0, 1, 0, 0];
 	var identityColor  = [1, 1, 1, 1, 0, 0, 0, 0];
 
@@ -283,7 +281,7 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 				// Also see Jeff._generateImageName (Jeff index.js file)
 				var canvasName = this._options.onlyOneFrame ? symbol.className : symbol.frameNames[frame];
 				canvasses[canvasName] = canvas;
-				graphicProperties[canvasName] = {
+				spriteProperties[canvasName] = {
 					x: x, y: y,
 					w: w, h: h,
 					sx: 0, sy: 0,
@@ -323,29 +321,33 @@ function augmentToNextPowerOf2(canvasses) {
 };
 
 CanvasRenderer.prototype._renderImages = function (retry) {
-	var imageList = [];
+	var imageMap  = [];
 	var canvasses = {};
-	var graphicProperties = {};
+	var spriteProperties = {};
 	if (this._options.renderFrames) {
-		this._renderFrames(canvasses, graphicProperties);
+		this._renderFrames(canvasses, spriteProperties);
 	} else {
-		// 1 - Generating list of graphics to render
-		var graphics = getGraphicsToRender(this._extractor._symbols, this._extractor._symbolList, this._images);
+		// 1 - Generating list of sprites to render
+		var sprites = this._getSpritesToRender();
 
-		// 2 - Computing minimum rendering size that will guarantee lossless quality for each graphic
-		var graphicMaxDims = this._getMaxDimensions(graphics);
+		// 2 - Computing minimum rendering size that will guarantee lossless quality for each sprite
+		var spriteMaxDims = this._getMaxDimensions(sprites);
 
-		// 3 - Computing graphic dimensions with respect to their maximum dimensions and required ratios
-		graphicProperties = this._setGraphicDimensions(graphics, graphicMaxDims);
+		// 3 - Computing sprite dimensions with respect to their maximum dimensions and required ratios
+		spriteProperties = this._setSpriteDimensions(sprites, spriteMaxDims);
 
-		// 4 - Rendering graphics in canvasses
-		this._renderGraphics(graphics, graphicProperties, canvasses);
+		// 4 - Rendering sprites in canvasses
+		this._renderSprites(sprites, spriteProperties, canvasses);
 	}
 
 	if (this._options.createAtlas) {
-		var atlas = this._renderAtlas(canvasses, graphicProperties);
+		var atlas = this._renderAtlas(canvasses, spriteProperties);
 		if (atlas) {
-			imageList = [{ img: atlas, name: 'atlas' }];
+			// imageList = [{ img: atlas, name: 'atlas' }];
+			var spriteList = this._spriteList;
+			for (var s = 0; s < spriteList.length; s += 1) {
+				imageMap[spriteList[s]] = atlas;
+			}
 		} else {
 			// TODO: add an option to let the user choose whether he wants to create
 			// several atlases or reduce the asset sizes when this situation happens
@@ -369,15 +371,17 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 		if (this._options.powerOf2Images) {
 			augmentToNextPowerOf2(canvasses);
 		}
-		for (var imageName in canvasses) {
-			imageList.push({ name: imageName, img: canvasses[imageName] });
-		}
+
+		imageMap = canvasses;
+		// for (var imageName in canvasses) {
+		// 	imageList.push({ name: imageName, img: canvasses[imageName] });
+		// }
 	}
 
 	// End of the rendering
 	// All swf objects should have been correctly rendered at this point
 	this._rendering = false;
 	if (this._callback) {
-		this._callback(imageList, graphicProperties);
+		this._callback(imageMap, spriteProperties);
 	}
 };

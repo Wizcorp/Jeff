@@ -4,17 +4,17 @@ var CanvasRenderer = require('./main');
 CanvasRenderer.prototype._prepareImages = function () {
 	// Creating the list of images
 	var imagesToPrepare = [];
-	var symbolList = this._extractor._symbolList;
-	var symbols    = this._extractor._symbols;
-	for (var s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
+	var spriteList = this._extractor._spriteList;
+	var sprites    = this._extractor._sprites;
+	for (var s = 0; s < spriteList.length; s += 1) {
+		var spriteId = spriteList[s];
+		var sprite   = sprites[spriteId];
 
-		if (symbol.isImage) {
-			imagesToPrepare.push(symbol.swfObject);
+		if (sprite.isImage) {
+			imagesToPrepare.push(sprite.swfObject);
 		}
 
-		var images = symbol.images;
+		var images = sprite.images;
 		if (images) {
 			for (var i = 0; i < images.length; i += 1) {
 				var imageData = images[i];

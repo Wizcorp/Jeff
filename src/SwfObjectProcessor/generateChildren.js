@@ -48,7 +48,7 @@ function interpolateGradient(gradients, a, b) {
 	};
 }
 
-function createMorphedShape(symbols, symbol, ratio) {
+function createMorphedShape(items, symbol, ratio) {
 	/* jshint maxstatements: 100 */
 
 	var symbolMorphings = symbol.morphings;
@@ -62,7 +62,7 @@ function createMorphedShape(symbols, symbol, ratio) {
 		return symbolMorphings[ratio];
 	}
 
-	var morphId = symbols.length;
+	var morphId = items.length;
 	symbolMorphings[ratio] = morphId;
 
 	var swfObject = symbol.swfObject;
@@ -75,7 +75,7 @@ function createMorphedShape(symbols, symbol, ratio) {
 		maxDims:   {},
 		parents:   []
 	};
-	symbols.push(morphedSymbol);
+	items.push(morphedSymbol);
 
 	// interpolating the shape
 	var shapes = [];
@@ -223,7 +223,7 @@ function createMorphedShape(symbols, symbol, ratio) {
 	return morphId;
 }
 
-function generateChildren(symbol, symbols) {
+function generateChildren(symbol, items) {
 	/* jshint maxcomplexity: 50 */
 	/* jshint maxstatements: 150 */
 
@@ -268,16 +268,16 @@ function generateChildren(symbol, symbols) {
 
 				// Testing for special case when object is a morphing
 				objectData = objectLayerData[depth];
-				var childSymbol = symbols[objectData.id];
+				var childItem = items[objectData.id];
 
-				if (childSymbol && childSymbol.isMorphing) {
+				if (childItem && childItem.isMorphing) {
 					var ratio = objectData.ratio || 0;
 
 					// Creating a new graphic that correspond to interpolation of the morphing with respect to the given ratio
-					var morphedShapeId = createMorphedShape(symbols, childSymbol, ratio);
+					var morphedShapeId = createMorphedShape(items, childItem, ratio);
 
 					// Replacing symbol id
-					morphedShapeReplacements.push({ depth: depth, morphId: morphedShapeId, originalId: childSymbol.id });
+					morphedShapeReplacements.push({ depth: depth, morphId: morphedShapeId, originalId: childItem.id });
 				}
 			}
 		}
@@ -406,8 +406,8 @@ function generateChildren(symbol, symbols) {
 	}
 	orderedDepths.sort(function (a, b) { return b.depth - a.depth; });
 
-	var child, children = [];
-	symbol.children = children;
+	var child;
+	var children = symbol.children;
 	for (var i = 0; i < orderedDepths.length; i += 1) {
 		var content = orderedDepths[i].content;
 		depth = orderedDepths[i].depth;
@@ -497,18 +497,18 @@ function generateChildren(symbol, symbols) {
 	// Adding parent id to each symbol present in children
 	var symbolId = symbol.id;
 	for (c = 0; c < children.length; c += 1) {
-		symbols[children[c].id].parents[symbolId] = symbolId;
+		var item = items[children[c].id];
+		if (!item) {
+			console.error('items', Object.keys(items).slice(150))
+			console.error('item', children[c].id, children[c])
+		}
+		item.parents[symbolId] = symbolId;
 	}
 }
 
-function generateAllChildren(symbols) {
-	var nbSymbols = symbols.length;
-	for (var s = 0; s < nbSymbols; s += 1) {
-		var symbol = symbols[s];
-		if (symbol.swfObject.timeline) {
-			// Generate children if symbol has a timeline
-			generateChildren(symbol, symbols);
-		}
+function generateAllChildren(symbols, items) {
+	for (var symbolId in symbols) {
+		generateChildren(symbols[symbolId], items);
 	}
 }
 

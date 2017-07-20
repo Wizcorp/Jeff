@@ -121,54 +121,54 @@
 // }
 
 
-function generateExportList(symbols, classList, attributeFilter) {
-	var symbolList = [];
+function generateExportList(items, classList, attributeFilter) {
+	var itemList = [];
 
-	// Creating list of symbols to export
-	// Starting with the symbols corresponding to the class to export
-	var symbolsToVisit = [];
+	// Creating list of items to export
+	// Starting with the items corresponding to the classes to export
+	var itemsToVisit = [];
 	for (var className in classList) {
 		var classId = classList[className];
 
 		if (attributeFilter) {
-			var classSymbol = symbols[classId];
+			var classSymbol = items[classId];
 			for (var a = 0; a < attributeFilter.length; a +=1) {
 				if (classSymbol[attributeFilter[a]]) {
 					// The class has the corresponding attribute, it is added for export
-					symbolsToVisit.push(classId);
+					itemsToVisit.push(classId);
 				}
 			}
 		} else {
-			symbolsToVisit.push(classId);
+			itemsToVisit.push(classId);
 		}
 	}
 
 	// Including symbols that are descendants of the classes to export
-	var visistedSymbols = {};
-	while (symbolsToVisit.length > 0) {
-		var symbolId = symbolsToVisit.pop();
-		if (visistedSymbols[symbolId]) {
+	var visistedItems = {};
+	while (itemsToVisit.length > 0) {
+		var itemId = itemsToVisit.pop();
+		if (visistedItems[itemId]) {
 			continue;
 		}
 
-		visistedSymbols[symbolId] = true;
+		visistedItems[itemId] = true;
 
-		// First time to visit the symbol
+		// First time to visit the item
 		// Adding it to the list of symbols to export
-		symbolList.push(symbolId);
+		itemList.push(itemId);
 
-		var symbol   = symbols[symbolId];
-		var children = symbol.children;
-		if (!children) {
+		var item = items[itemId];
+		if (item.isSprite) {
 			continue;
 		}
 
+		var children = item.children;
 		for (var c = 0; c < children.length; c += 1) {
 			var childData = children[c];
-			symbolsToVisit.push(childData.id);
+			itemsToVisit.push(childData.id);
 		}
 	}
 
-	return symbolList;
+	return itemList;
 }
 module.exports = generateExportList;
