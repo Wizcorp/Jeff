@@ -22,7 +22,7 @@ CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
 			var symbol  = this._extractor._symbols[classId];
 
 			// TODO: use whole animation bounds, not just first frame
-			var bounds = symbol.bounds[0];
+			var bounds = symbol.bounds;
 			if (bounds) {
 				var widthRatio  = fixedWidth  / (bounds.right  - bounds.left);
 				var heightRatio = fixedHeight / (bounds.bottom - bounds.top);
@@ -64,7 +64,7 @@ CanvasRenderer.prototype._setSpriteDimensions = function (sprites, spriteMaxDims
 		var sprite = sprites[id];
 
 		// Computing element dimension before scaling to ratio
-		var bounds = sprite.bounds[0];
+		var bounds = sprite.bounds;
 
 		var x, y, w, h;
 		var rendersImage = true;
@@ -218,78 +218,75 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) 
 		var ratio     = this._extractor._fileGroupRatio;
 		var fixedSize = this._options.fixedSize;
 
-		if (symbol.isAnimation) {
-			var duration       = symbol.duration;
-			var animColors     = [];
-			var animTransforms = [];
-			var classAnim      = { id: classId, colors: animColors, transforms: animTransforms };
+		var duration       = symbol.duration;
+		var animColors     = [];
+		var animTransforms = [];
+		var animInstance   = { id: classId, colors: animColors, transforms: animTransforms };
 
-			var bounds = symbol.containerBounds || symbol.bounds;
-			if (!bounds) {
+		var bounds = symbol.containerBounds || symbol.bounds;
+		if (!bounds) {
+			continue;
+		}
+
+		var f, frames = [];
+		if (this._options.renderFrames instanceof Array) {
+			var framesToRender  = this._options.renderFrames;
+			var nFramesToRender = framesToRender.length;
+			for (f = 0; f < nFramesToRender; f += 1) {
+				frames.push(framesToRender[f] - 1);
+			}
+		} else {
+			for (f = 0; f < duration; f += 1) {
+				frames.push(f);
+			}
+		}
+
+		var nFrames = frames.length;
+		for (f = 0; f < nFrames; f += 1) {
+			var frame   = frames[f];
+			var canvas  = getCanvas();
+			var context = canvas.getContext('2d');
+
+			var frameBounds = bounds[frame];
+			if (!frameBounds) {
 				continue;
 			}
 
-			var f, frames = [];
-			if (this._options.renderFrames instanceof Array) {
-				var framesToRender  = this._options.renderFrames;
-				var nFramesToRender = framesToRender.length;
-				for (f = 0; f < nFramesToRender; f += 1) {
-					frames.push(framesToRender[f] - 1);
-				}
-			} else {
-				for (f = 0; f < duration; f += 1) {
-					frames.push(f);
-				}
+			var x = frameBounds.left;
+			var y = frameBounds.top;
+			var w = frameBounds.right  - frameBounds.left;
+			var h = frameBounds.bottom - frameBounds.top;
+
+			var ratioW = ratio;
+			var ratioH = ratio;
+			if (fixedSize) {
+				ratioW *= fixedSize.width  / w;
+				ratioH *= fixedSize.height / h;
 			}
 
-			var nFrames = frames.length;
-			for (f = 0; f < nFrames; f += 1) {
-				var frame   = frames[f];
-				var canvas  = getCanvas();
-				var context = canvas.getContext('2d');
+			canvas.width  = Math.ceil(ratioW * w);
+			canvas.height = Math.ceil(ratioH * h);
 
-				var frameBounds = bounds[frame];
-				if (!frameBounds) {
-					continue;
-				}
-
-				var x = frameBounds.left;
-				var y = frameBounds.top;
-				var w = frameBounds.right  - frameBounds.left;
-				var h = frameBounds.bottom - frameBounds.top;
-
-				var ratioW = ratio;
-				var ratioH = ratio;
-				if (fixedSize) {
-					ratioW *= fixedSize.width  / w;
-					ratioH *= fixedSize.height / h;
-				}
-
-				canvas.width  = Math.ceil(ratioW * w);
-				canvas.height = Math.ceil(ratioH * h);
-
-				if (canvas.width === 0 || canvas.height === 0) {
-					continue;
-				}
-
-				animColors[frame]     = identityColor;
-				animTransforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
-				this._renderSymbol(canvas, context, identityMatrix, identityColor, classAnim, frame, false);
-
-				// TODO: find a more elegant way to deal with the 'only one frame' case: may be add an option to remove any suffix?
-				// Issue: we have image name resolution in 2 places
-				// Also see Jeff._generateImageName (Jeff index.js file)
-				var canvasName = this._options.onlyOneFrame ? symbol.className : symbol.frameNames[frame];
-				canvasses[canvasName] = canvas;
-				spriteProperties[canvasName] = {
-					x: x, y: y,
-					w: w, h: h,
-					sx: 0, sy: 0,
-					sw: canvas.width,
-					sh: canvas.height,
-					margin: MARGIN
-				};
+			if (canvas.width === 0 || canvas.height === 0) {
+				continue;
 			}
+
+			animColors[frame]     = identityColor;
+			animTransforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
+			this._renderSymbol(canvas, context, identityMatrix, identityColor, animInstance, frame, false);
+
+			// TODO: find a more elegant way to deal with the 'only one frame' case: may be add an option to remove any suffix?
+			// Issue: we have image name resolution in 2 places (see Jeff._generateImageName in jeff/index.js file)
+			var canvasName = this._options.onlyOneFrame ? symbol.className : symbol.frameNames[frame];
+			canvasses[canvasName] = canvas;
+			spriteProperties[canvasName] = {
+				x: x, y: y,
+				w: w, h: h,
+				sx: 0, sy: 0,
+				sw: canvas.width,
+				sh: canvas.height,
+				margin: MARGIN
+			};
 		}
 	}
 };
@@ -344,7 +341,7 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 		var atlas = this._renderAtlas(canvasses, spriteProperties);
 		if (atlas) {
 			// imageList = [{ img: atlas, name: 'atlas' }];
-			var spriteList = this._spriteList;
+			var spriteList = this._extractor._spriteList;
 			for (var s = 0; s < spriteList.length; s += 1) {
 				imageMap[spriteList[s]] = atlas;
 			}

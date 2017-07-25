@@ -11,24 +11,24 @@ function nextHighestPowerOfTwo(x) {
 	return x + 1;
 }
 
-CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
+CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 	/* jshint maxstatements: 50 */
-	var id, graphicDim;
+	var id, spriteDim;
 
-	// Computing total area taken by the graphics
+	// Computing total area taken by the sprites
 	var totalArea = 0;
-	var nGraphics = 0;
-	for (id in graphicDims) {
-		graphicDim = graphicDims[id];
-		totalArea += (graphicDim.sw + 2 * graphicDim.margin) * (graphicDim.sh + 2 * graphicDim.margin);
-		nGraphics += 1;
+	var nbSprites = 0;
+	for (id in spriteDims) {
+		spriteDim = spriteDims[id];
+		totalArea += (spriteDim.sw + 2 * spriteDim.margin) * (spriteDim.sh + 2 * spriteDim.margin);
+		nbSprites += 1;
 	}
 	var sqrSide = Math.sqrt(totalArea);
 
-	// Populating list of graphics
-	var graphics = [];
-	for (id in graphicDims) {
-		graphics.push(graphicDims[id]);
+	// Populating list of sprites
+	var sprites = [];
+	for (id in spriteDims) {
+		sprites.push(spriteDims[id]);
 	}
 
 	var alpha, beta;
@@ -57,13 +57,13 @@ CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 			alpha = alphaValues[a];
 			beta = 1 - alpha;
 
-			graphics.sort(cmpFunc);
+			sprites.sort(cmpFunc);
 			var boxPartioning = new BoxPartitioning({ left: 0, right: maxAtlasDim, top: 0, bottom: maxAtlasDim }, priorityZone);
 
-			for (var g = 0; g < graphics.length; g += 1) {
-				var graphic = graphics[g];
-				// Adding margin on 4 sides of the graphic
-				boxPartioning.add(graphic, graphic.sw + 2 * graphicDim.margin, graphic.sh + 2 * graphicDim.margin);
+			for (var g = 0; g < sprites.length; g += 1) {
+				var sprite = sprites[g];
+				// Adding margin on 4 sides of the sprite
+				boxPartioning.add(sprite, sprite.sw + 2 * spriteDim.margin, sprite.sh + 2 * spriteDim.margin);
 			}
 
 			var occupiedArea = boxPartioning.occupiedBounds.a;
@@ -84,22 +84,22 @@ CanvasRenderer.prototype._computeAtlasLayout = function (graphicDims) {
 		return;
 	}
 
-	// Computing the positions of every graphic on the atlas
-	var graphicBoxes = bestPartitioning.occupiedSpace;
-	for (var g = 0; g < graphicBoxes.length; g += 1) {
-		var graphicBox = graphicBoxes[g];
-		graphicDim = graphicBox.e;
+	// Computing the positions of every sprite on the atlas
+	var spriteBoxes = bestPartitioning.occupiedSpace;
+	for (var g = 0; g < spriteBoxes.length; g += 1) {
+		var spriteBox = spriteBoxes[g];
+		spriteDim = spriteBox.e;
 
-		// Computing position of graphic on the atlas with respect to its margin
-		graphicDim.sx = graphicBox.l + graphicDim.margin;
-		graphicDim.sy = graphicBox.t + graphicDim.margin;
+		// Computing position of sprite on the atlas with respect to its margin
+		spriteDim.sx = spriteBox.l + spriteDim.margin;
+		spriteDim.sy = spriteBox.t + spriteDim.margin;
 	}
 
 	return { width: bestPartitioning.occupiedBounds.w, height: bestPartitioning.occupiedBounds.h };
 }
 
-CanvasRenderer.prototype._renderAtlas = function (graphicCanvasses, graphicDims) {
-	var atlasDim = this._computeAtlasLayout(graphicDims);
+CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
+	var atlasDim = this._computeAtlasLayout(spriteDims);
 	if (!atlasDim) {
 		return;
 	}
@@ -111,7 +111,7 @@ CanvasRenderer.prototype._renderAtlas = function (graphicCanvasses, graphicDims)
 		return emptyCanvas;
 	}
 
-	// Drawing each graphical element into atlas
+	// Drawing each spriteal element into atlas
 	var atlas   = getCanvas();
 	var context = atlas.getContext('2d');
 
@@ -125,16 +125,16 @@ CanvasRenderer.prototype._renderAtlas = function (graphicCanvasses, graphicDims)
 		context.fillRect(0, 0, atlas.width, atlas.height);
 	}
 
-	for (var id in graphicCanvasses) {
-		var graphicCanvas = graphicCanvasses[id];
-		var dimensions    = graphicDims[id];
+	for (var id in spriteCanvasses) {
+		var spriteCanvas = spriteCanvasses[id];
+		var dimensions   = spriteDims[id];
 
 		// Clearing empty space
 		if (showEmptySpace) {
 			context.clearRect(dimensions.sx - 1, dimensions.sy - 1, dimensions.sw + 2, dimensions.sh + 2);
 		}
 
-		context.drawImage(graphicCanvas, dimensions.sx, dimensions.sy);
+		context.drawImage(spriteCanvas, dimensions.sx, dimensions.sy);
 
 		if (showBounds) {
 			context.fillStyle = '#000000';

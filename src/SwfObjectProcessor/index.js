@@ -13,6 +13,7 @@ function processSwfObjects(swfObjects, allClasses, extractor) {
 	// Creating items from swfObjects
 	var items = createItems(swfObjects);
 	var symbols = items.symbols;
+	var sprites = items.sprites;
 	var itemsById = items.itemsById;
 
 	// Adding class names to symbols
@@ -28,7 +29,7 @@ function processSwfObjects(swfObjects, allClasses, extractor) {
 	if (extractor._options.removeList) removeSymbols(symbols, classSymbols, extractor._options.removeList);
 
 	// Computing bounds per frame for each symbol
-	computeBounds(symbols);
+	computeBounds(symbols, sprites);
 
 	// Computing maximum dimensions per class for each sprite
 	computeDimensions(itemsById, allClasses);

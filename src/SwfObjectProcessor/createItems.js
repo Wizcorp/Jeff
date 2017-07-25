@@ -19,7 +19,6 @@ function Item () {
 
 	this.swfObject = null;
 	this.parents   = {};
-	this.bounds    = [];
 }
 
 function Sprite () {
@@ -30,6 +29,7 @@ function Sprite () {
 	this.isShape    = false;
 	this.isMorphing = false;
 
+	this.bounds = null;
 	this.shapes = null;
 	this.images = null;
 }
@@ -42,6 +42,7 @@ function Symbol (frameCount) {
 	this.frameCount = frameCount;
 	this.scalingGrid = null;
 	this.children = [];
+	this.bounds = [];
 }
 
 Symbol.prototype.isSymbol = true;
@@ -77,7 +78,7 @@ function createItem(id, swfObject) {
 		case 'image':
 			item = new Sprite();
 			item.isImage = true;
-			item.bounds = [new Bounds(0, swfObject.width, 0, swfObject.height)];
+			item.bounds = new Bounds(0, swfObject.width, 0, swfObject.height);
 			break;
 
 		case 'shape':
@@ -116,12 +117,12 @@ function createItem(id, swfObject) {
 
 			// Converting bounds from twips to pixels
 			var bounds = swfObject.bounds;
-			item.bounds = [new Bounds(
+			item.bounds = new Bounds(
 				bounds.left   / 20,
 				bounds.right  / 20,
 				bounds.top    / 20,
 				bounds.bottom / 20
-			)];
+			);
 			break;
 
 		case 'morph':
@@ -131,12 +132,12 @@ function createItem(id, swfObject) {
 			var startBounds = swfObject.startBounds;
 			var endBounds   = swfObject.endBounds;
 
-			item.bounds = [new Bounds(
+			item.bounds = new Bounds(
 				Math.min(startBounds.left,   endBounds.left)   / 20,
 				Math.max(startBounds.right,  endBounds.right)  / 20,
 				Math.min(startBounds.top,    endBounds.top)    / 20,
 				Math.max(startBounds.bottom, endBounds.bottom) / 20
-			)];
+			);
 			break;
 
 		// Not handled yet

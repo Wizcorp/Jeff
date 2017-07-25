@@ -1,6 +1,6 @@
 'use strict';
 
-function generateMetaData(sprites, spriteList, symbols, symbolList, spriteProperties, usesAtlas) {
+function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList, spriteProperties, useAtlas) {
 	var spritesData = {};
 	for (var s = 0; s < spriteList.length; s += 1) {
 		var spriteId = spriteList[s];
@@ -12,14 +12,22 @@ function generateMetaData(sprites, spriteList, symbols, symbolList, spriteProper
 				x: -properties.x,
 				y: -properties.y,
 				w: properties.w,
-				h: properties.h
+				h: properties.h,
 			};
 
-			if (usesAtlas) {
+			if (useAtlas) {
 				spriteData.sx = properties.sx;
 				spriteData.sy = properties.sy;
 				spriteData.sw = properties.sw;
 				spriteData.sh = properties.sh;
+			}
+
+			if (imageIndexes) {
+				spriteData.image = useAtlas ? 0 : imageIndexes[spriteId];
+			}
+
+			if (properties.margin) {
+				spriteData.margin = properties.margin;
 			}
 
 			spritesData[spriteId] = spriteData;

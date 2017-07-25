@@ -1,5 +1,13 @@
 'use strict';
 
+
+function Bounds (left, right, top, bottom) {
+	this.left   = left;
+	this.right  = right;
+	this.top    = top;
+	this.bottom = bottom;
+}
+
 var transformBound = function (transform, bounds) {
 	var a = transform[0];
 	var b = transform[1];
@@ -46,26 +54,26 @@ var transformBound = function (transform, bounds) {
 	right   = Math.max(x, right);
 	bottom  = Math.max(y, bottom);
 
-	return { left: left, top: top, right: right, bottom: bottom };
+	return new Bounds(left, right, top, bottom);
 };
 
-function computeBoundsAtFrame(symbol, symbols, frame) {
+function computeBoundsAtFrame(itemId, symbols, sprites, frame) {
 	/* jshint maxstatements: 100 */
+	var sprite = sprites[itemId];
+	if (sprite) {
+		return sprite.bounds;
+	}
 
-	var duration = symbol.duration || 1;
-	frame = frame % duration;
+	var symbol = symbols[itemId];
+	if (!symbol) {
+		return null;
+	}
+
+	var frameCount = symbol.frameCount || 1;
+	frame = frame % frameCount;
 
 	if (symbol.bounds && symbol.bounds[frame]) {
 		return symbol.bounds[frame];
-	}
-
-	var children = symbol.children;
-	if (!children || children.length === 0) {
-		if (!symbol.bounds) {
-			symbol.bounds = [];
-		}
-		symbol.bounds[frame] = null;
-		return null;
 	}
 
 	// frame bounds
@@ -74,21 +82,16 @@ function computeBoundsAtFrame(symbol, symbols, frame) {
 	var fRight  = - Infinity;
 	var fBottom = - Infinity;
 
+	var children = symbol.children;
 	for (var c = children.length - 1; c >= 0; c -= 1) {
 		var child = children[c];
-		var childData = symbols[child.id];
-
-		if (!childData) {
-			// symbol not found in symbols!
-			continue;
-		}
 
 		// Verifying that the child exists for given frame
 		if (frame < child.frames[0] || child.frames[1] < frame || child.maskEnd) {
 			continue;
 		}
 
-		var bbox = computeBoundsAtFrame(childData, symbols, frame - child.frames[0]);
+		var bbox = computeBoundsAtFrame(child.id, symbols, sprites, frame - child.frames[0]);
 		if (bbox === null) {
 			continue;
 		}
@@ -114,19 +117,13 @@ function computeBoundsAtFrame(symbol, symbols, frame) {
 
 			while (!children[--c].maskEnd) {
 				var clippedChild = children[c];
-				var clippedChildData = symbols[clippedChild.id];
-
-				if (!clippedChildData) {
-					// symbol not found in symbols!
-					continue;
-				}
 
 				// Verifying that the child exists for given frame
 				if (frame < clippedChild.frames[0] || clippedChild.frames[1] < frame) {
 					continue;
 				}
 
-				var clippedBbox = computeBoundsAtFrame(clippedChildData, symbols, frame - clippedChild.frames[0]);
+				var clippedBbox = computeBoundsAtFrame(clippedChild.id, symbols, sprites, frame - clippedChild.frames[0]);
 				if (clippedBbox === null) {
 					continue;
 				}
@@ -167,23 +164,13 @@ function computeBoundsAtFrame(symbol, symbols, frame) {
 
 	var frameBounds;
 	if (fLeft <= fRight && fTop <= fBottom) {
-		frameBounds = {
-			left:   fLeft,
-			right:  fRight,
-			top:    fTop,
-			bottom: fBottom
-		};
+		frameBounds = new Bounds(fLeft, fRight, fTop, fBottom);
 	} else {
 		frameBounds = null;
 	}
 
-	if (!symbol.bounds) {
-		symbol.bounds = [];
-	}
-
 	symbol.bounds[frame] = frameBounds;
-
-	return symbol.bounds[frame];
+	return frameBounds;
 }
 
 module.exports = computeBoundsAtFrame;

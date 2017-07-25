@@ -69,7 +69,7 @@ function simplifyAnimation(itemsData, nbItems) {
 				var toDuplicate = false;
 				var childReplacement = childReplacements[childId];
 				if (childReplacement) {
-					if (childItem.className) {
+					if (childItem.className || childItem.x !== childReplacement.x || childItem.y !== childReplacement.y) {
 						// child needs to be duplicated
 						toDuplicate = true;
 					} else if (symbol.className) {
@@ -77,7 +77,6 @@ function simplifyAnimation(itemsData, nbItems) {
 						// only if the child is not used anywhere else
 						if (isChildUsedElsewhere(childId, symbol, symbols)) {
 							// otherwise substituting with a copy of the child
-							// console.error('USED ELSEWHERE!!', childId, id)
 							toDuplicate = true;
 						}
 					}
@@ -86,7 +85,6 @@ function simplifyAnimation(itemsData, nbItems) {
 				}
 
 				if (toDuplicate) {
-					// console.error('DUPLICATION!!', childId, newItemId, id)
 					childItem = JSON.parse(JSON.stringify(childReplacement));
 					childItem.x -= tx;
 					childItem.y -= ty;
@@ -104,7 +102,6 @@ function simplifyAnimation(itemsData, nbItems) {
 					sprites[childId] = childItem;
 				}
 
-			// console.error('replacement!', childId, id, symbol.className)
 				replacements[id] = childId;
 				childItem.className = symbol.className;
 			}

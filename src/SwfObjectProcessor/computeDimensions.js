@@ -21,7 +21,7 @@ function multiplyTransforms(t0, t1) {
 function computeSpriteDimension(items, item, transform, frame, originClassName) {
 
 	if (item.isSprite) {
-		var bounds = item.bounds[0];
+		var bounds = item.bounds;
 		var width  = bounds.right  - bounds.left;
 		var height = bounds.bottom - bounds.top;
 		var a = transform[0] * width;
