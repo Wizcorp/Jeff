@@ -87,6 +87,7 @@ ipcRenderer.on('argv', function (sender, argv) {
 			main.quit();
 		});
 	} else {
-		// TODO: no arguments -> start Jeff in GUI mode
+		// no arguments => start Jeff in GUI mode
+		require('./gui');
 	}
 });

@@ -6,7 +6,7 @@ var app = electron.app;
 var mainWindow = null;
 
 function createWindow () {
-	mainWindow = new electron.BrowserWindow({ width: 600, height: 600 });
+	mainWindow = new electron.BrowserWindow({ width: 800, height: 470 });
 
 	mainWindow.loadURL(url.format({
 		pathname: path.join(__dirname, 'app/index.html'),
@@ -14,7 +14,8 @@ function createWindow () {
 		slashes:  true
 	}));
 
-	mainWindow.webContents.openDevTools();
+	// comment out if you need devTools for browser window
+	// mainWindow.webContents.openDevTools({ mode: 'detach' });
 
 	mainWindow.webContents.on('did-finish-load', function onReady() {
 		mainWindow.webContents.send('argv', JSON.stringify(process.argv));
