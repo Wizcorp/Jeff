@@ -68,7 +68,7 @@ function createMorphedShape(items, symbol, ratio) {
 	var swfObject = symbol.swfObject;
 	var morphedSymbol = {
 		id:        morphId,
-		isGraphic: true,
+		isSprite:  true,
 		isShape:   true,
 		isMorphed: true,
 		swfObject: swfObject,
