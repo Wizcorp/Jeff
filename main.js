@@ -13,6 +13,7 @@ function createWindow () {
 		protocol: 'file:',
 		slashes:  true
 	}));
+	mainWindow.setMenu(null);
 
 	// comment out if you need devTools for browser window
 	// mainWindow.webContents.openDevTools({ mode: 'detach' });
