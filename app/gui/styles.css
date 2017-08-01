@@ -4,10 +4,15 @@ body {
 	background-color: #AAA;
 }
 
+::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+
 .dropAreaContainer {
 	display: inline-block;
 	vertical-align: top;
-	margin: 20px;
+	margin: 15px;
 }
 
 .fileDropper {
@@ -16,7 +21,7 @@ body {
 	color: #848484;
 	font-size: 25px;
 	text-align: center;
-	padding: 127px 15px;
+	padding: 124px 15px;
 	background: repeating-linear-gradient(
 		-45deg,
 		#a1a1a1,
@@ -35,8 +40,8 @@ body {
 	border: solid 1px #666;
 	border-radius: 4px;
 	background-color: #EEE;
-	width: calc(100% - 6px);
-	overflow: hidden;
+	width: 230px;
+	overflow-x: scroll;
 	white-space: nowrap;
 	padding: 3px;
 }
@@ -55,7 +60,7 @@ body {
 .jeffOptions {
 	display: inline-block;
 	vertical-align: top;
-	margin: 20px;
+	margin: 15px;
 }
 
 .jeffOption {
