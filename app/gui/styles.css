@@ -1,0 +1,110 @@
+body {
+	font-family: verdana;
+	font-size: 12px;
+	background-color: #AAA;
+}
+
+::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+
+.dropAreaContainer {
+	display: inline-block;
+	vertical-align: top;
+	margin: 15px;
+}
+
+.fileDropper {
+	border-radius: 10px;
+	border: dashed 4px #848484;
+	color: #848484;
+	font-size: 25px;
+	text-align: center;
+	padding: 124px 15px;
+	background: repeating-linear-gradient(
+		-45deg,
+		#a1a1a1,
+		#a1a1a1 10px,
+		rgba(0,0,0,0) 10px,
+		rgba(0,0,0,0) 20px
+	);
+}
+
+.outputDirectoryCaption {
+	margin-top: 17px;
+	color: #666;
+}
+
+.outputDirectory {
+	border: solid 1px #666;
+	border-radius: 4px;
+	background-color: #EEE;
+	width: 230px;
+	overflow-x: scroll;
+	white-space: nowrap;
+	padding: 3px;
+}
+
+.newDirectoryOption {
+	border-radius: 5px;
+	background-color: #cccac6;
+	margin-top: 10px;
+	padding: 3px;
+}
+
+.newDirectoryOption-title {
+	vertical-align: middle;
+}
+
+.jeffOptions {
+	display: inline-block;
+	vertical-align: top;
+	margin: 15px;
+}
+
+.jeffOption {
+	border-radius: 5px;
+	margin-bottom: 3px;
+	background-color: #cccac6;
+}
+
+.jeffOption-title {
+	display: inline-block;
+	vertical-align: middle;
+	width: 108px;
+	margin: 3px;
+}
+
+.jeffOption-container {
+	display: inline-block;
+	vertical-align: middle;
+	width: 50px;
+}
+
+.jeffOption-description {
+	display: inline-block;
+	vertical-align: middle;
+	width: 300px;
+	overflow: hidden;
+	color: #888377;
+	white-space: nowrap;
+}
+
+.checkbox {
+	vertical-align: middle;
+	border: 4px solid #88a;
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3) inset;
+}
+
+.dropdown {
+	vertical-align: middle;
+	width: 70px;
+	margin-left: -23px;
+}
+
+.numberInput {
+	vertical-align: middle;
+	width: 42px;
+}
+
