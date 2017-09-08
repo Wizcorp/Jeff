@@ -36,6 +36,7 @@ Go into JEFF directory and do:
 
 You can see all available options [here](https://github.com/Wizcorp/Jeff/blob/electron/bin/jeff).
 
+You can also launch it with a user interface with: `electron .`
 
 ## Roadmap for unsupported features
 * Texts (Static/Dynamic)
