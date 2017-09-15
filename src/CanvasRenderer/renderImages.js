@@ -2,6 +2,9 @@
 var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 
+// margin between assets in atlasmaps
+var MARGIN = 1;
+
 CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
 	var graphicsMaxDims = {};
 	var classRatios     = this._options.classRatios || {};
@@ -55,7 +58,6 @@ CanvasRenderer.prototype._getMaxDimensions = function (graphics) {
 	return graphicsMaxDims;
 };
 
-var MARGIN = 1;
 CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxDims) {
 
 	var graphicDims = {};
@@ -287,7 +289,7 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 					sx: 0, sy: 0,
 					sw: canvas.width,
 					sh: canvas.height,
-					margin: 0
+					margin: MARGIN
 				};
 			}
 		}
