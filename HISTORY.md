@@ -1,10 +1,9 @@
 # Release history
 
-## v0.3.2
-Merged 0.2.9 fix (Fixed rendering when masked layers have blend modes)
-
 ## v0.3.1
-Merged 0.2.8 fix (Fixed artefacts/glitches when using a texture generated with both options "createAtlas" and "renderFrames")
+Merged 0.2.8 and 0.2.9 fixes:
+- Fixed rendering when masked layers have blend modes
+- Fixed artefacts/glitches when using a texture generated with both options "createAtlas" and "renderFrames"
 
 ## v0.3.0
 Electron version
