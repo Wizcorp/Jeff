@@ -431,7 +431,7 @@ Jeff.prototype._retrieveFrameRate = function (graphicProperties) {
 		}
 	}
 	return frameRate || fallback;
-}
+};
 
 Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 	// Constructing symbols data that will be included in the export
