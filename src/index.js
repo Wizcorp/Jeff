@@ -8,6 +8,7 @@ var async    = require('async');
 var beautify = require('js-beautify').js_beautify;
 var pngquant = require('node-pngquant-native');
 var imgOptim = require('image-optim');
+var pjson    = require('../package.json');
 
 var helper         = require('./Helper/index.js');
 var SwfParser      = require('./Gordon/parser.js');
@@ -35,6 +36,9 @@ function Jeff() {
 
 	// Extraction options
 	this._options = null;
+
+	// Information about source files
+	this._fileHeaderInfo         = undefined;
 
 	// Parameters applying to the file group being processed
 	this._fileGroupName          = undefined; // Name
@@ -100,6 +104,7 @@ function JeffOptions(params) {
 	this.customWriteFile     = params.customWriteFile;
 	this.customReadFile      = params.customReadFile;
 	this.fixedSize           = params.fixedSize;
+	this.fallbackFrameRate   = params.fallbackFrameRate   || 25;
 	// 1: minimal log level, 10: maximum log level. TODO: needs to be implemented on every console.warn/log/error
 	this.verbosity           = params.verbosity           || 3;
 
@@ -139,6 +144,7 @@ function JeffOptions(params) {
 Jeff.prototype._init = function (options, cb) {
 	this._options = new JeffOptions(options);
 	this._extractedData = [];
+	this._fileHeaderInfo = {};
 
 	// Making sure the input directory exists
 	if (!fs.existsSync(this._options.inputDir)) {
@@ -224,6 +230,7 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 		self._parser.parse(swfName, swfData,
 			function (swfObject) {
 				var id = swfObject.id;
+				swfObject._swfName = swfName;
 				// console.log('object', JSON.stringify(swfObject));
 				// console.log('properties!!', swfObject.id);
 				// for (var p in swfObject) {
@@ -236,13 +243,13 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 						return;
 					}
 
-					// TODO: handle labels
-					if (swfObject.type === 'labels') {
+					if (swfObject.type === 'header') {
+						self._fileHeaderInfo[swfName] = swfObject;
 						return;
 					}
 
-					// TODO: handle header
-					if (swfObject.type === 'header') {
+					// TODO: handle labels
+					if (swfObject.type === 'labels') {
 						return;
 					}
 
@@ -263,6 +270,14 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 				swfObjects[id] = swfObject;
 			},
 			function (error) {
+				// propagate original files' frame rate to their objects
+				for (var id in swfObjects) {
+					var object = swfObjects[id];
+					if (self._fileHeaderInfo[object._swfName]) {
+						object._frameRate = self._fileHeaderInfo[object._swfName].frameRate;
+					}
+				}
+
 				self._swfObjectsPerFileGroup.push(swfObjects);
 				nextSwfCb(error);
 			}
@@ -399,6 +414,25 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	}
 };
 
+Jeff.prototype._retrieveFrameRate = function (graphicProperties) {
+	var frameRate;
+	var fallback = this._options.fallbackFrameRate;
+	for (var id in graphicProperties) {
+		var graphicProperty = graphicProperties[id];
+		if (graphicProperty.frameRate) {
+			if (!frameRate) {
+				frameRate = graphicProperty.frameRate;
+			} else if (graphicProperty.frameRate !== frameRate) {
+				if (this._options.verbosity >= 3) {
+					console.warn('multiple elements have different framerates, using fallback (' + fallback + 'fps)');
+				}
+				return fallback;
+			}
+		}
+	}
+	return frameRate || fallback;
+}
+
 Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 	// Constructing symbols data that will be included in the export
 	var exportSymbolsData;
@@ -427,8 +461,8 @@ Jeff.prototype._generateExportData = function (graphicProperties, imageNames) {
 	// Constructing metadata of conversion properties (for importing purpose)
 	var exportProperties = {
 		app: 'https://www.npmjs.com/package/jeff',
-		version: '0.2.2', // TODO: fetch version number automatically from package.json
-		frameRate: 25,
+		version: pjson.version,
+		frameRate: this._retrieveFrameRate(graphicProperties),
 		scale: this._options.ratio,
 		filtering: [this._options.minificationFilter, this._options.magnificationFilter],
 		mipmapCompatible: this._options.powerOf2Images,

@@ -153,7 +153,8 @@ CanvasRenderer.prototype._setGraphicDimensions = function (graphics, graphicMaxD
 			dx: x * graphicRatio,
 			dy: y * graphicRatio,
 			ratio:  graphicRatio,
-			margin: MARGIN
+			margin: MARGIN,
+			frameRate: graphic.swfObject && graphic.swfObject._frameRate
 		};
 	}
 
@@ -289,7 +290,8 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, graphicProperties)
 					sx: 0, sy: 0,
 					sw: canvas.width,
 					sh: canvas.height,
-					margin: MARGIN
+					margin: MARGIN,
+					frameRate: symbol.swfObject && symbol.swfObject._frameRate
 				};
 			}
 		}
