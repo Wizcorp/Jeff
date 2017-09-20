@@ -69,8 +69,8 @@ function addContainer(symbols, classSymbols, container) {
 
 			if (hasContainer) {
 				var containerBounds = [];
-				var duration = symbol.duration;
-				for (var f = 0; f < duration; f += 1) {
+				var frameCount = symbol.frameCount;
+				for (var f = 0; f < frameCount; f += 1) {
 					containerBounds[f] = getContainerBounds(containerInstance, containerSymbol, symbols, f);
 				}
 				classSymbol.containerBounds = containerBounds;

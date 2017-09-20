@@ -11,30 +11,27 @@ var helper         = require('./Helper/index.js');
 var SwfParser      = require('./Gordon/parser.js');
 var processSwf     = require('./SwfObjectProcessor/index.js');
 var CanvasRenderer = require('./CanvasRenderer/index.js');
+var packageJson    = require('../package.json');
 
 // For non-ascii characters in SWF class names
 var JSON_WRITE_OPTIONS = { encoding:'binary' };
+var DEFAULT_FRAME_RATE = 25;
 
 // Jeff's only API method
 function extractSwf(exportParams, cb) {
-	var jeff = new Jeff();
-
-	// Setting up Jeff ...
-	jeff._init(exportParams, function (swfUris) {
-		// ... for extractiong
-		jeff._extractFileGroups(swfUris, cb);
-	});
+	var jeff = new Jeff(exportParams);
+	jeff._extract(cb);
 };
 module.exports = extractSwf;
 
-function Jeff() {
+function Jeff(options) {
 	this._parser   = new SwfParser();      // Parser of swf files
 	this._renderer = new CanvasRenderer(); // Renderer for swf images and vectorial shapes
 
 	// Extraction options
-	this._options = null;
+	this._options = new JeffOptions(options);
 
-	this._frameRate = 25;
+	this._frameRate = DEFAULT_FRAME_RATE;
 	this._frameSize = null;
 
 	// Parameters applying to the file group being processed
@@ -134,8 +131,7 @@ function JeffOptions(params) {
 	}
 }
 
-Jeff.prototype._init = function (options, cb) {
-	this._options = new JeffOptions(options);
+Jeff.prototype._extract = function (cb) {
 	this._extractedData = [];
 
 	// Making sure the input directory exists
@@ -151,12 +147,12 @@ Jeff.prototype._init = function (options, cb) {
 
 	// Starting extraction on source file(s)
 	if (this._options.source instanceof Array) {
-		cb(this._options.source);
+		this._extractFileGroups(this._options.source, cb);
 	} else {
 		var self = this;
 		glob(this._options.source, { cwd: this._options.inputDir }, function (error, uris) {
 			console.error('uris', self._options.source, uris)
-			cb(uris);
+			self._extractFileGroups(uris, cb);
 		})
 	}
 };
@@ -234,18 +230,19 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 						return;
 					}
 
-					// TODO: handle labels
-					if (swfObject.type === 'labels') {
-						return;
-					}
-
 					if (swfObject.type === 'header') {
 						self._frameRate = swfObject.frameRate;
+
 						self._frameSize = swfObject.frameSize;
 						self._frameSize.left   /= 20;
 						self._frameSize.right  /= 20;
 						self._frameSize.top    /= 20;
 						self._frameSize.bottom /= 20;
+						return;
+					}
+
+					// TODO: handle labels
+					if (swfObject.type === 'labels') {
 						return;
 					}
 
@@ -266,6 +263,13 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 				swfObjects[id] = swfObject;
 			},
 			function (error) {
+				// propagatating original current file's frame rate to its objects
+				for (var id in swfObjects) {
+					swfObjects[id].frameRate = self._frameRate;
+				}
+
+				swfObjects[0].frameSize = self._frameSize;
+
 				self._swfObjectsPerFileGroup.push(swfObjects);
 				nextSwfCb(error);
 			}
@@ -444,7 +448,7 @@ Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	if (this._options.renderFrames) {
 		exportItemsData = helper.generateFrameByFrameData(this._symbols, this._symbolList, imageIndexes, spriteProperties, this._options.onlyOneFrame, this._options.createAtlas, nbItems);
 	} else {
-		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, imageIndexes, this._symbols, this._symbolList, spriteProperties, useAtlas);
+		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, imageIndexes, this._symbols, this._symbolList, spriteProperties, useAtlas, this._frameRate);
 	}
 
 	// Applying post-process, if any
@@ -467,9 +471,8 @@ Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	var exportData = {
 		meta: {
 			app: 'https://www.npmjs.com/package/jeff',
-			version: '0.3.0', // TODO: fetch version number automatically from package.json
+			version: packageJson.version,
 			frameRate: this._frameRate,
-			frameSize: this._frameSize,
 			scale: this._options.ratio,
 			filtering: [this._options.minificationFilter, this._options.magnificationFilter],
 			mipmapCompatible: this._options.powerOf2Images,
@@ -478,15 +481,15 @@ Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 		images: images
 	};
 
-	if (this._options.renderFrames) {
-		exportData.sprites = exportItemsData.sprites;
-		exportData.symbols = exportItemsData.symbols;
-	} else {
+	if (!this._options.renderFrames) {
 		if (this._options.flatten)  { helper.flattenAnimations(exportItemsData); }
 		if (this._options.simplify) { helper.simplifyAnimation(exportItemsData, nbItems); }
-		exportData.sprites = exportItemsData.sprites;
-		exportData.symbols = exportItemsData.symbols;
+	}
 
+	exportData.sprites = exportItemsData.sprites;
+	exportData.symbols = exportItemsData.symbols;
+
+	if (!this._options.renderFrames) {
 		helper.delocateMatrices(exportData);
 	}
 

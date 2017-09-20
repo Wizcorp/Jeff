@@ -235,9 +235,9 @@ function generateChildren(symbol, items) {
 	var depths = {}; // Contains element mapped by depth
 	var depth, d, depthArray, nDepths;
 	var timeline = symbol.swfObject.timeline;
-	// var duration = timeline.length;
-	var duration = symbol.duration;
-	for (f = 0; f < duration; f += 1) {
+	// var frameCount = timeline.length;
+	var frameCount = symbol.frameCount;
+	for (f = 0; f < frameCount; f += 1) {
 
 		if (timeline[f] !== undefined) {
 			var displayList = timeline[f].displayList;
@@ -469,7 +469,7 @@ function generateChildren(symbol, items) {
 	var frames = [];
 	symbol.frames = frames;
 	symbol.frameNames = [];
-	for (f = 0; f < duration; f += 1) {
+	for (f = 0; f < frameCount; f += 1) {
 		frames[f] = [];
 		symbol.frameNames[f] = symbol.className + '_frame' + f;
 	}

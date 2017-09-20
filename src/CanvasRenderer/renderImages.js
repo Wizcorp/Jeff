@@ -218,7 +218,7 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) 
 		var ratio     = this._extractor._fileGroupRatio;
 		var fixedSize = this._options.fixedSize;
 
-		var duration       = symbol.duration;
+		var frameCount     = symbol.frameCount;
 		var animColors     = [];
 		var animTransforms = [];
 		var animInstance   = { id: classId, colors: animColors, transforms: animTransforms };
@@ -236,7 +236,7 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) 
 				frames.push(framesToRender[f] - 1);
 			}
 		} else {
-			for (f = 0; f < duration; f += 1) {
+			for (f = 0; f < frameCount; f += 1) {
 				frames.push(f);
 			}
 		}

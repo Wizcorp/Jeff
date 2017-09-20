@@ -20,6 +20,29 @@ function cmpColors(a, b) {
 	return a[7] - b[7];
 }
 
+function areObjectsDifferent(objectA, objectB) {
+	for (var property in objectA) {
+		var valueA = objectA[property];
+		var valueB = objectB[property];
+		if (typeof valueA === 'object') {
+			if (typeof valueB !== 'object') {
+				return true;
+			}
+
+			if (areObjectsDifferent(valueA, valueB)) {
+				return true;
+			}
+		} else {
+			if (valueA !== valueB) {
+				return true;
+			}
+		}
+
+	}
+
+	return false;
+}
+
 function areTransformsDifferent(a, b) {
 	return a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2] || a[3] !== b[3] || a[4] !== b[4] || a[5] !== b[5];
 }
@@ -70,10 +93,26 @@ function findColorIdx(colors, color) {
 	throw new Error('[findColorIdx] Color index not found');
 }
 
-function delocateTransforms(exportData) {
+function findFilterIdx(filters, filter) {
+	// Filters are NOT supposed sorted
+	for (var f = 0; f < filters.length; f += 1) {
+		if (areObjectsDifferent(filter, filters[f])) {
+			continue;
+		}
+
+		return f;
+	}
+
+	return -1;
+}
+
+function delocateMatrices(exportData) {
 	/* jshint maxstatements: 100 */
 	var delocatedTransformsTmp = [];
-	var delocatedColorsTmp   = [];
+	var delocatedColorsTmp     = [];
+
+	// TODO: delocate filters
+	var delocatedFilters = [];
 
 	var symbols = exportData.symbols;
 
@@ -95,6 +134,22 @@ function delocateTransforms(exportData) {
 
 			for (c = 0; c < colors.length; c += 1) {
 				delocatedColorsTmp.push(colors[c]);
+			}
+
+			var filters = child.filters;
+			if (filters) {
+				for (var f = 0; f < filters.length; f += 1) {
+					// searching for current filter in list of existing filters
+					// N.B not using binary search as for transformation and color matrices
+					// (we supposed that few filters are used, therefore no need to optimized)
+					var filter = filters[f];
+					var filterIndex = findFilterIdx(delocatedFilters, filter);
+					if (filterIndex === -1) {
+						filterIndex = delocatedFilters.length;
+						delocatedFilters.push(filter);
+					}
+					filters[f] = filterIndex;
+				}
 			}
 		}
 	}
@@ -136,6 +191,10 @@ function delocateTransforms(exportData) {
 		exportData.colors = delocatedColors;
 	}
 
+	if (delocatedFilters.length > 0) {
+		exportData.filters = delocatedFilters;
+	}
+
 	// Final step: replacing transforms and colors in the animations
 	// by their indexes in the delocated matrix and color arrays
 	for (id in symbols) {
@@ -156,4 +215,4 @@ function delocateTransforms(exportData) {
 		}
 	}
 }
-module.exports = delocateTransforms;
+module.exports = delocateMatrices;

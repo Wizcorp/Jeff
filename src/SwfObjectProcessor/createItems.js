@@ -36,10 +36,11 @@ function Sprite () {
 
 Sprite.prototype.isSprite = true;
 
-function Symbol (frameCount) {
+function Symbol (frameCount, frameRate, frameSize) {
 	Item.call(this);
-	this.duration = frameCount; // TODO: get rid of duration attribute
 	this.frameCount = frameCount;
+	this.frameRate = frameRate;
+	this.frameSize = frameSize;
 	this.scalingGrid = null;
 	this.children = [];
 	this.bounds = [];
@@ -49,6 +50,8 @@ Symbol.prototype.isSymbol = true;
 
 function UnhandledItem () {
 	Item.call(this);
+
+	this.unhandled = true;
 }
 
 UnhandledItem.prototype.isUnhandled = true;
@@ -57,11 +60,11 @@ function createItem(id, swfObject) {
 	var item;
 	switch(swfObject.type) {
 		case 'main':
-			item = new Symbol(swfObject.frameCount);
+			item = new Symbol(swfObject.frameCount, swfObject.frameRate, swfObject.frameSize);
 			break;
 
 		case 'sprite':
-			item = new Symbol(swfObject.frameCount);
+			item = new Symbol(swfObject.frameCount, swfObject.frameRate, swfObject.frameSize);
 
 			var scalingGrid = swfObject.scalingGrid;
 			if (scalingGrid) {

@@ -47,8 +47,8 @@ function computeSpriteDimension(items, item, transform, frame, originClassName) 
 		return;
 	}
 
-	var duration = item.duration;
-	frame = frame % duration;
+	var frameCount = item.frameCount;
+	frame = frame % frameCount;
 
 	var children = item.children;
 	for (var c1 = 0; c1 < children.length; c1 += 1) {
@@ -72,8 +72,8 @@ function computeDimensions(items, allClasses) {
 		var nbClasses = classIds.length;
 		for (var c = 0; c < nbClasses; c += 1) {
 			var classSymbol = items[classIds[c]];
-			var duration    = classSymbol.duration;
-			for (var f = 0; f < duration; f += 1) {
+			var frameCount  = classSymbol.frameCount;
+			for (var f = 0; f < frameCount; f += 1) {
 				computeSpriteDimension(items, classSymbol, [1, 0, 0, 1, 0, 0], f, className);
 			}
 		}

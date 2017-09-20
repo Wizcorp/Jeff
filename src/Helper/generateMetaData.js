@@ -1,6 +1,6 @@
 'use strict';
 
-function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList, spriteProperties, useAtlas) {
+function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList, spriteProperties, useAtlas, frameRate) {
 	var spritesData = {};
 	for (var s = 0; s < spriteList.length; s += 1) {
 		var spriteId = spriteList[s];
@@ -41,7 +41,7 @@ function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList
 		var symbol   = symbols[symbolId];
 		var symbolData = {
 			children: JSON.parse(JSON.stringify(symbol.children)),
-			frameCount: symbol.duration
+			frameCount: symbol.frameCount
 		};
 
 		if (symbol.className) {
@@ -51,6 +51,14 @@ function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList
 
 		if (symbol.scalingGrid) {
 			symbolData.scalingGrid = symbol.scalingGrid;
+		}
+
+		if (symbol.frameRate !== frameRate) {
+			symbolData.frameRate = symbol.frameRate;
+		}
+
+		if (symbol.frameSize) {
+			symbolData.frameSize = symbol.frameSize;
 		}
 
 		symbolsData[symbolId] = symbolData;
