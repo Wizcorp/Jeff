@@ -1,5 +1,8 @@
 # Release history
 
+## v0.2.9
+Fixed rendering when masked layers have blend modes
+
 ## v0.2.8
 Fixed artefacts/glitches when using a texture generated with both options "createAtlas" and "renderFrames"
 

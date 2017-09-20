@@ -172,6 +172,9 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 			clipCanvas.width  = localCanvas.width;
 			clipCanvas.height = localCanvas.height;
 
+			// To support masked layers with blend mode
+			clipContext.drawImage(localCanvas, 0, 0);
+
 			// Rendering all the children that are meant to be clipped
 			var clipDepth = child.clipDepth;
 			while (!children[--c].maskEnd) {
