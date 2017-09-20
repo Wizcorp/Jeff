@@ -1,4 +1,3 @@
-'use strict';
 var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 
@@ -10,16 +9,20 @@ CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
 	var classRatios     = this._options.classRatios || {};
 	var hasFixedSize    = this._options.fixedSize !== undefined;
 
+	var className;
+	var classGroupList = this._extractor._classGroupList;
+
 	// Updating class ratios with respect to the fixed size dimension
 	if (hasFixedSize) {
 
 		var classRatiosTmp = {};
 		var fixedWidth     = this._options.fixedSize.width;
 		var fixedHeight    = this._options.fixedSize.height;
+		var symbols        = this._extractor._symbols;
 
-		for (var className in this._extractor._classGroupList) {
-			var classId = this._extractor._classGroupList[className];
-			var symbol  = this._extractor._symbols[classId];
+		for (className in classGroupList) {
+			var classId = classGroupList[className];
+			var symbol  = symbols[classId];
 
 			// TODO: use whole animation bounds, not just first frame
 			var bounds = symbol.bounds;
@@ -41,7 +44,7 @@ CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
 		var maxWidth  = 0;
 		var maxHeight = 0;
 		var maxDims   = sprite.maxDims;
-		for (var className in this._extractor._classGroupList) {
+		for (className in classGroupList) {
 
 			maxDimForClass = maxDims[className];
 			if (maxDimForClass) {
@@ -177,7 +180,7 @@ CanvasRenderer.prototype._getSpritesToRender = function () {
 		spritesToRender[spriteId] = sprite;
 	}
 	return spritesToRender;
-}
+};
 
 CanvasRenderer.prototype._renderSprites = function (sprites, spriteDims, canvasses) {
 	for (var id in sprites) {
@@ -315,7 +318,7 @@ function augmentToNextPowerOf2(canvasses) {
 		// Replacing non-power of 2 canvas by power of 2 canvas
 		canvasses[imageName] = po2Canvas;
 	}
-};
+}
 
 CanvasRenderer.prototype._renderImages = function (retry) {
 	var imageMap  = [];
@@ -358,9 +361,9 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 
 		if (retry) {
 			console.warn(
-				'[CanvasRenderer.renderImages] Atlas created with ratio ' + this._extractor._fileGroupRatio
-				+ ' because it did not fit into the required dimensions.'
-				+ '(File Group ' + this._extractor._fileGroupName + ', Class ' + this._extractor._classGroupName + ')'
+				'[CanvasRenderer.renderImages] Atlas created with ratio ' + this._extractor._fileGroupRatio +
+				' because it did not fit into the required dimensions.' +
+				'(File Group ' + this._extractor._fileGroupName + ', Class ' + this._extractor._classGroupName + ')'
 			);
 		}
 

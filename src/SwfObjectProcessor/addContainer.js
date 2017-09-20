@@ -1,4 +1,3 @@
-'use strict';
 
 var computeBoundsAtFrame = require('./computeBoundsAtFrame');
 
@@ -69,7 +68,7 @@ function addContainer(symbols, classSymbols, container) {
 
 			if (hasContainer) {
 				var containerBounds = [];
-				var frameCount = symbol.frameCount;
+				var frameCount = classSymbol.frameCount;
 				for (var f = 0; f < frameCount; f += 1) {
 					containerBounds[f] = getContainerBounds(containerInstance, containerSymbol, symbols, f);
 				}

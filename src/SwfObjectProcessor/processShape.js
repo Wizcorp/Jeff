@@ -1,4 +1,3 @@
-'use strict';
 
 function convertWidthToPixels(key, val) {
 	if (key === 'width') {

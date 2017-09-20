@@ -1,4 +1,3 @@
-'use strict';
 
 var Base = {
 	debug: false,

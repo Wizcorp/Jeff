@@ -1,5 +1,4 @@
 /* jslint node: true */
-'use strict';
 
 var DoublyList = require('./DoublyList.js');
 

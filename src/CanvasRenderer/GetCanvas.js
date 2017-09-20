@@ -1,5 +1,3 @@
-"use strict"
-
 function GetCanvas(width, height) {
 	var w = width || 300;
 	var h = height || 150;

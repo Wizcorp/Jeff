@@ -1,4 +1,3 @@
-'use strict';
 
 function cmpTransforms(a, b) {
 	if (a[0] !== b[0]) return a[0] - b[0];

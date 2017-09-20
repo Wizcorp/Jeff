@@ -1,4 +1,3 @@
-'use strict';
 
 var createItems       = require('./createItems');
 var addClassNames     = require('./addClassNames');

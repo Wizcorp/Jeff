@@ -1,4 +1,3 @@
-'use strict';
 function isChildUsedElsewhere (childId, consideredSymbol, symbols) {
 	for (var id in symbols) {
 		var symbol = symbols[id];
@@ -118,15 +117,14 @@ function simplifyAnimation(itemsData, nbItems) {
 		symbol = symbols[id];
 		var children = symbol.children;
 		for (var c1 = 0; c1 < children.length; c1 += 1) {
-			var childId = children[c1].id;
-
-			var replacement = replacements[childId];
+			var replacedChildId = children[c1].id;
+			var replacement = replacements[replacedChildId];
 			while (replacement !== undefined) { // could be 0
-				childId = replacement;
-				replacement = replacements[childId];
+				replacedChildId = replacement;
+				replacement = replacements[replacedChildId];
 			}
 
-			children[c1].id = childId;
+			children[c1].id = replacedChildId;
 		}
 	}
 

@@ -1,4 +1,3 @@
-'use strict';
 
 var computeBoundsAtFrame = require('./computeBoundsAtFrame');
 

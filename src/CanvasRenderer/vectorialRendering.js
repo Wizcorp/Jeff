@@ -1,4 +1,3 @@
-'use strict';
 var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 
@@ -96,7 +95,6 @@ CanvasRenderer.prototype._outlineShapes = function (context, shapes, transform, 
 	var pixelHinting = (line === undefined) ? false : ((line.pixelHinting === undefined) ? false : line.pixelHinting);
 	this._createPath(context, shapes, transform, pixelHinting);
 
-	var s, color, alpha, scale;
 	context.save();
 
 	if (line.capStart) {
@@ -107,13 +105,14 @@ CanvasRenderer.prototype._outlineShapes = function (context, shapes, transform, 
 		context.lineJoin = line.join.toLowerCase();
 	}
 
+	var s, color, alpha, scale, scaleX, scaleY;
 	if (line.fill === undefined) {
 		// In Flash, lines cannot look thinner than width of 1
 		// Line width has to adjust to the transformation matrix
 		scale = 1;
 		if (!line.noHScale) {
-			var scaleX = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
-			var scaleY = Math.sqrt(transform[2] * transform[2] + transform[3] * transform[3]);
+			scaleX = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
+			scaleY = Math.sqrt(transform[2] * transform[2] + transform[3] * transform[3]);
 			scale = 0.5 * (scaleX + scaleY);
 		}
 		context.lineWidth = Math.max(line.width * scale, 1);
@@ -130,8 +129,8 @@ CanvasRenderer.prototype._outlineShapes = function (context, shapes, transform, 
 
 		scale = 1;
 		if (!line.noHScale) {
-			var scaleX = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
-			var scaleY = Math.sqrt(transform[2] * transform[2] + transform[3] * transform[3]);
+			scaleX = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
+			scaleY = Math.sqrt(transform[2] * transform[2] + transform[3] * transform[3]);
 			scale = 0.5 * (scaleX + scaleY);
 		}
 

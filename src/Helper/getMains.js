@@ -1,4 +1,3 @@
-'use strict';
 
 function getMains(swfObjects) {
 	var mains = [];

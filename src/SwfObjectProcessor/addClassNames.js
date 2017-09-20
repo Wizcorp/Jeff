@@ -1,4 +1,3 @@
-'use strict';
 
 function addClassNames(symbols, allClasses) {
 	var classSymbols = [];

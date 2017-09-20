@@ -1,5 +1,4 @@
 /* jshint camelcase: false */ //for js_beautify and indent_size
-'use strict';
 
 var fs       = require('fs-extra');
 var glob     = require('glob');
@@ -18,11 +17,10 @@ var JSON_WRITE_OPTIONS = { encoding:'binary' };
 var DEFAULT_FRAME_RATE = 25;
 
 // Jeff's only API method
-function extractSwf(exportParams, cb) {
+module.exports = function extractSwf(exportParams, cb) {
 	var jeff = new Jeff(exportParams);
 	jeff._extract(cb);
 };
-module.exports = extractSwf;
 
 function Jeff(options) {
 	this._parser   = new SwfParser();      // Parser of swf files
@@ -137,7 +135,6 @@ Jeff.prototype._extract = function (cb) {
 	// Making sure the input directory exists
 	if (!fs.existsSync(this._options.inputDir)) {
 		throw new Error('Directory not found: ' + this._options.inputDir);
-		return;
 	}
 
 	// Creating output directory if inexistant
@@ -151,9 +148,8 @@ Jeff.prototype._extract = function (cb) {
 	} else {
 		var self = this;
 		glob(this._options.source, { cwd: this._options.inputDir }, function (error, uris) {
-			console.error('uris', self._options.source, uris)
 			self._extractFileGroups(uris, cb);
-		})
+		});
 	}
 };
 
@@ -425,18 +421,18 @@ Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	var imageIndexes = null;
 	var images = [];
 	if (!this._options.ignoreImages) {
+		var imageIds = Object.keys(imageNames);
+		var i, spriteId;
 		imageIndexes = {};
 		if (useAtlas) {
-			var imageIds = Object.keys(imageNames);
-			for (var i = 0; i < imageIds.length; i += 1) {
-				var spriteId = imageIds[i];
+			for (i = 0; i < imageIds.length; i += 1) {
+				spriteId = imageIds[i];
 				imageIndexes[spriteId] = 0;
 			}
 			images[0] = imageNames[imageIds[0]];
 		} else {
-			var imageIds = Object.keys(imageNames);
-			for (var i = 0; i < imageIds.length; i += 1) {
-				var spriteId = imageIds[i];
+			for (i = 0; i < imageIds.length; i += 1) {
+				spriteId = imageIds[i];
 				imageIndexes[spriteId] = i;
 				images[i] = imageNames[spriteId];
 			}

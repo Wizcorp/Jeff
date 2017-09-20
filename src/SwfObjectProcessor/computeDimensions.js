@@ -1,4 +1,3 @@
-'use strict';
 
 function multiplyTransforms(t0, t1) {
 	var a0 = t0[0];

@@ -1,4 +1,3 @@
-'use strict';
 
 function populatePositions(symbol, positionData, imageId, imageIndexes, useAtlas) {
 	symbol.x = positionData.x;

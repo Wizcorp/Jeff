@@ -1,4 +1,3 @@
-'use strict';
 var getCanvas       = require('./GetCanvas');
 var CanvasRenderer  = require('./main');
 var BoxPartitioning = require('./BoxPartitioning');
@@ -60,8 +59,8 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 			sprites.sort(cmpFunc);
 			var boxPartioning = new BoxPartitioning({ left: 0, right: maxAtlasDim, top: 0, bottom: maxAtlasDim }, priorityZone);
 
-			for (var g = 0; g < sprites.length; g += 1) {
-				var sprite = sprites[g];
+			for (var s = 0; s < sprites.length; s += 1) {
+				var sprite = sprites[s];
 				// Adding margin on 4 sides of the sprite
 				boxPartioning.add(sprite, sprite.sw + 2 * spriteDim.margin, sprite.sh + 2 * spriteDim.margin);
 			}
@@ -86,8 +85,8 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 
 	// Computing the positions of every sprite on the atlas
 	var spriteBoxes = bestPartitioning.occupiedSpace;
-	for (var g = 0; g < spriteBoxes.length; g += 1) {
-		var spriteBox = spriteBoxes[g];
+	for (var b = 0; b < spriteBoxes.length; b += 1) {
+		var spriteBox = spriteBoxes[b];
 		spriteDim = spriteBox.e;
 
 		// Computing position of sprite on the atlas with respect to its margin
@@ -96,7 +95,7 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 	}
 
 	return { width: bestPartitioning.occupiedBounds.w, height: bestPartitioning.occupiedBounds.h };
-}
+};
 
 CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
 	var atlasDim = this._computeAtlasLayout(spriteDims);

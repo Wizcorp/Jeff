@@ -1,8 +1,8 @@
-'use strict';
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._prepareImages = function () {
 	// Creating the list of images
+	var i;
 	var imagesToPrepare = [];
 	var spriteList = this._extractor._spriteList;
 	var sprites    = this._extractor._sprites;
@@ -16,7 +16,7 @@ CanvasRenderer.prototype._prepareImages = function () {
 
 		var images = sprite.images;
 		if (images) {
-			for (var i = 0; i < images.length; i += 1) {
+			for (i = 0; i < images.length; i += 1) {
 				var imageData = images[i];
 				imagesToPrepare.push(imageData.image);
 			}
@@ -44,7 +44,7 @@ CanvasRenderer.prototype._prepareImages = function () {
 		}
 	};
 
-	for (var i = 0; i < imagesToPrepare.length; i += 1) {
+	for (i = 0; i < imagesToPrepare.length; i += 1) {
 		this._renderImageToCanvas(imagesToPrepare[i], onWrittenCallBack);
 	}
 };

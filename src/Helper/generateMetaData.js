@@ -1,8 +1,9 @@
-'use strict';
 
 function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList, spriteProperties, useAtlas, frameRate) {
+	var s;
+
 	var spritesData = {};
-	for (var s = 0; s < spriteList.length; s += 1) {
+	for (s = 0; s < spriteList.length; s += 1) {
 		var spriteId = spriteList[s];
 		var sprite   = sprites[spriteId];
 
@@ -36,7 +37,7 @@ function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList
 
 
 	var symbolsData = {};
-	for (var s = 0; s < symbolList.length; s += 1) {
+	for (s = 0; s < symbolList.length; s += 1) {
 		var symbolId = symbolList[s];
 		var symbol   = symbols[symbolId];
 		var symbolData = {

@@ -1,4 +1,3 @@
-'use strict';
 
 function blend(blendEquation, source, destination, dim, bounds) {
 	var left   = Math.max(dim.left,   bounds.left);

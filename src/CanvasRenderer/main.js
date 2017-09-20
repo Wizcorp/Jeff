@@ -1,4 +1,3 @@
-'use strict';
 var renderImageToCanvas = require('./renderImageToCanvas.js');
 
 /* List of known issues:

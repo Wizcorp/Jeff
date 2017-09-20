@@ -1,4 +1,3 @@
-'use strict';
 
 function removeSymbols(symbols, classSymbols, removeList){
 	var nbClassSymbols = classSymbols.length;

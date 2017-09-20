@@ -1,4 +1,3 @@
-'use strict';
 
 module.exports.generateMetaData         = require('./generateMetaData.js');
 module.exports.generateFrameByFrameData = require('./generateFrameByFrameData.js');

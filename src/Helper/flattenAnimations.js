@@ -1,4 +1,3 @@
-'use strict';
 
 function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 	/* jshint maxstatements: 100 */
@@ -61,6 +60,7 @@ function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 		var newColors       = [];
 		var firstFrameChild = 0;
 
+		var flattenedChild;
 		for (var f = 0; f < instanceFrameCount; f += 1) {
 
 			// parent transformation
@@ -87,7 +87,7 @@ function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 			var childFrame = f % symbolFrameCount - childInstance.frames[0];
 			if (childFrame < 0 || childFrameCount <= childFrame) {
 				if (newTransforms.length > 0) {
-					var flattenedChild = JSON.parse(JSON.stringify(childInstance));
+					flattenedChild = JSON.parse(JSON.stringify(childInstance));
 					flattenedChild.transforms = newTransforms;
 					flattenedChild.colors   = newColors;
 					flattenedChild.frames   = [firstFrameParent + firstFrameChild, firstFrameParent + f - 1];
@@ -144,7 +144,7 @@ function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 
 		// Replacing child transforms
 		if (newTransforms.length > 0) {
-			var flattenedChild = JSON.parse(JSON.stringify(childInstance));
+			flattenedChild = JSON.parse(JSON.stringify(childInstance));
 			flattenedChild.transforms = newTransforms;
 			flattenedChild.colors   = newColors;
 			flattenedChild.frames   = [firstFrameParent + firstFrameChild, firstFrameParent + f - 1];

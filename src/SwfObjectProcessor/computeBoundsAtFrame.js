@@ -1,4 +1,3 @@
-'use strict';
 
 
 function Bounds (left, right, top, bottom) {

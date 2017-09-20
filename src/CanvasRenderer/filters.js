@@ -1,4 +1,3 @@
-'use strict';
 
 // TODO:
 // - bevel filter

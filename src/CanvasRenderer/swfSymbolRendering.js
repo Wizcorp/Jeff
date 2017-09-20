@@ -1,4 +1,3 @@
-'use strict';
 var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
 var filters        = require('./filters');

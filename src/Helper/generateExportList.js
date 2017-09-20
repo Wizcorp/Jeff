@@ -1,4 +1,3 @@
-'use strict';
 
 
 function generateExportList(items, classList, attributeFilter) {
