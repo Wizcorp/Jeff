@@ -416,18 +416,26 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	var nbItems = this._items.length;
 
+	var useAtlas = this._options.createAtlas;
+
 	var imageIndexes = null;
-	var images = null;
-	if (this._options.ignoreImages) {
-		images = [];
-	} else {
-		var imageIds = Object.keys(imageNames);
-		imageIndexes = new Array(imageIds.length);
-		images = new Array(imageIds.length);
-		for (var i = 0; i < imageIds.length; i += 1) {
-			var spriteId = imageIds[i];
-			imageIndexes[spriteId] = i;
-			images[i] = imageNames[spriteId];
+	var images = [];
+	if (!this._options.ignoreImages) {
+		imageIndexes = {};
+		if (useAtlas) {
+			var imageIds = Object.keys(imageNames);
+			for (var i = 0; i < imageIds.length; i += 1) {
+				var spriteId = imageIds[i];
+				imageIndexes[spriteId] = 0;
+			}
+			images[0] = imageNames[imageIds[0]];
+		} else {
+			var imageIds = Object.keys(imageNames);
+			for (var i = 0; i < imageIds.length; i += 1) {
+				var spriteId = imageIds[i];
+				imageIndexes[spriteId] = i;
+				images[i] = imageNames[spriteId];
+			}
 		}
 	}
 
@@ -436,7 +444,7 @@ Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
 	if (this._options.renderFrames) {
 		exportItemsData = helper.generateFrameByFrameData(this._symbols, this._symbolList, imageIndexes, spriteProperties, this._options.onlyOneFrame, this._options.createAtlas, nbItems);
 	} else {
-		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, imageIndexes, this._symbols, this._symbolList, spriteProperties, this._options.createAtlas);
+		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, imageIndexes, this._symbols, this._symbolList, spriteProperties, useAtlas);
 	}
 
 	// Applying post-process, if any
