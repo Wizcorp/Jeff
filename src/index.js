@@ -414,6 +414,7 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	}
 };
 
+// TODO: frame rate should be stored on symbols instead of graphic properties
 Jeff.prototype._retrieveFrameRate = function (graphicProperties) {
 	var frameRate;
 	var fallback = this._options.fallbackFrameRate;
