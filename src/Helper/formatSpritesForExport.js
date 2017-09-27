@@ -1,5 +1,4 @@
-var getCanvas       = require('./GetCanvas');
-var CanvasRenderer  = require('./main');
+var getCanvas       = require('../CanvasRenderer/GetCanvas');
 var BoxPartitioning = require('./BoxPartitioning');
 
 function nextHighestPowerOfTwo(x) {
@@ -10,19 +9,17 @@ function nextHighestPowerOfTwo(x) {
 	return x + 1;
 }
 
-CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
+function computeAtlasLayout(spriteDims, powerOf2Images, maxAtlasDim, exportRatio) {
 	/* jshint maxstatements: 50 */
 	var id, spriteDim;
 
 	// Computing total area taken by the sprites
 	var totalArea = 0;
-	var nbSprites = 0;
 	for (id in spriteDims) {
 		spriteDim = spriteDims[id];
 		totalArea += (spriteDim.sw + 2 * spriteDim.margin) * (spriteDim.sh + 2 * spriteDim.margin);
-		nbSprites += 1;
 	}
-	var sqrSide = Math.sqrt(totalArea);
+	var sqrSide = Math.sqrt(totalArea * exportRatio);
 
 	// Populating list of sprites
 	var sprites = [];
@@ -47,7 +44,6 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 		{ left: 0, right: sqrSide,         top: 0, bottom: sqrSide }
 	];
 
-	var maxAtlasDim = this._options.maxImageDim;
 	var bestLowerBound = 0;
 	var bestAlpha = 0;
 	for (var l = 0; l < priorityZones.length; l += 1) {
@@ -62,11 +58,13 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 			for (var s = 0; s < sprites.length; s += 1) {
 				var sprite = sprites[s];
 				// Adding margin on 4 sides of the sprite
-				boxPartioning.add(sprite, sprite.sw + 2 * spriteDim.margin, sprite.sh + 2 * spriteDim.margin);
+				var width = exportRatio * (sprite.sw + 2 * spriteDim.margin);
+				var height = exportRatio * (sprite.sh + 2 * spriteDim.margin);
+				boxPartioning.add(sprite, width, height);
 			}
 
 			var occupiedArea = boxPartioning.occupiedBounds.a;
-			if (this._options.powerOf2Images) {
+			if (powerOf2Images) {
 				occupiedArea = nextHighestPowerOfTwo(boxPartioning.occupiedBounds.w) * nextHighestPowerOfTwo(boxPartioning.occupiedBounds.h);
 			}
 
@@ -95,10 +93,10 @@ CanvasRenderer.prototype._computeAtlasLayout = function (spriteDims) {
 	}
 
 	return { width: bestPartitioning.occupiedBounds.w, height: bestPartitioning.occupiedBounds.h };
-};
+}
 
-CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
-	var atlasDim = this._computeAtlasLayout(spriteDims);
+function renderAtlas(spriteImages, spriteDims, powerOf2Images, maxImageDim, exportRatio) {
+	var atlasDim = computeAtlasLayout(spriteDims, powerOf2Images, maxImageDim, exportRatio);
 	if (!atlasDim) {
 		return;
 	}
@@ -110,12 +108,12 @@ CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
 		return emptyCanvas;
 	}
 
-	// Drawing each spriteal element into atlas
+	// Drawing each sprite into atlas
 	var atlas   = getCanvas();
 	var context = atlas.getContext('2d');
 
-	atlas.width  = this._options.powerOf2Images? nextHighestPowerOfTwo(atlasDim.width)  : atlasDim.width;
-	atlas.height = this._options.powerOf2Images? nextHighestPowerOfTwo(atlasDim.height) : atlasDim.height;
+	atlas.width  = powerOf2Images? nextHighestPowerOfTwo(atlasDim.width)  : atlasDim.width;
+	atlas.height = powerOf2Images? nextHighestPowerOfTwo(atlasDim.height) : atlasDim.height;
 
 	var showEmptySpace = false;
 	var showBounds     = false;
@@ -124,16 +122,19 @@ CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
 		context.fillRect(0, 0, atlas.width, atlas.height);
 	}
 
-	for (var id in spriteCanvasses) {
-		var spriteCanvas = spriteCanvasses[id];
-		var dimensions   = spriteDims[id];
+	for (var id in spriteImages) {
+		var spriteImage = spriteImages[id];
+		var dimensions  = spriteDims[id];
+
+		dimensions.sw *= exportRatio;
+		dimensions.sh *= exportRatio;
 
 		// Clearing empty space
 		if (showEmptySpace) {
 			context.clearRect(dimensions.sx - 1, dimensions.sy - 1, dimensions.sw + 2, dimensions.sh + 2);
 		}
 
-		context.drawImage(spriteCanvas, dimensions.sx, dimensions.sy);
+		context.drawImage(spriteImage, dimensions.sx, dimensions.sy, dimensions.sw, dimensions.sh);
 
 		if (showBounds) {
 			context.fillStyle = '#000000';
@@ -149,4 +150,66 @@ CanvasRenderer.prototype._renderAtlas = function (spriteCanvasses, spriteDims) {
 	}
 
 	return atlas;
+}
+
+function augmentToNextPowerOf2(spriteImages) {
+	for (var spriteId in spriteImages) {
+		var canvas = spriteImages[spriteId];
+		var width  = nextHighestPowerOfTwo(canvas.width);
+		var height = nextHighestPowerOfTwo(canvas.height);
+
+		// Creating a canvas with power of 2 dimensions
+		var po2Canvas  = getCanvas();
+		var po2Context = po2Canvas.getContext('2d');
+		po2Canvas.width  = width;
+		po2Canvas.height = height;
+		po2Context.drawImage(canvas, 0, 0);
+
+		// Replacing non-power of 2 canvas by power of 2 canvas
+		spriteImages[spriteId] = po2Canvas;
+	}
+}
+
+function ImageData(name, image, sprites) {
+	this.name = name;
+	this.image = image;
+	this.sprites = sprites;
+}
+
+module.exports = function formatSpritesForExport(spriteImages, spriteProperties, createAtlas, powerOf2Images, maxImageDim, classGroupName) {
+	var newSpriteImages = [];
+	if (createAtlas) {
+		var exportRatio = 1;
+		while (true) {
+			var atlas = renderAtlas(spriteImages, spriteProperties, powerOf2Images, maxImageDim, exportRatio);
+			if (atlas) {
+				// succesfully created the atlas!
+
+				// TODO: generate several atlases if one atlas cannot fit everything
+				newSpriteImages.push(new ImageData('atlas', atlas, Object.keys(spriteImages)));
+				break;
+			}
+
+			// failed to create the atlas, trying at a smaller scale
+			exportRatio *= 0.9;
+		}
+
+		if (exportRatio !== 1) {
+			console.warn(
+				'[helper.formatSpritesForExport] Atlas created with ratio ' + exportRatio +
+				' because it did not fit into the required dimensions.' +
+				'(File Group ' + exportRatio + ', Class ' + classGroupName + ')'
+			);
+		}
+	} else {
+		if (powerOf2Images) {
+			augmentToNextPowerOf2(spriteImages);
+		}
+		for (var spriteId in spriteImages) {
+			newSpriteImages.push(new ImageData(spriteId, spriteImages[spriteId], [spriteId]));
+		}
+	}
+
+	return newSpriteImages;
 };
+

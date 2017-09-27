@@ -4,10 +4,8 @@ CanvasRenderer.prototype._prepareImages = function () {
 	// Creating the list of images
 	var i;
 	var imagesToPrepare = [];
-	var spriteList = this._extractor._spriteList;
-	var sprites    = this._extractor._sprites;
-	for (var s = 0; s < spriteList.length; s += 1) {
-		var spriteId = spriteList[s];
+	var sprites = this._extractor._sprites;
+	for (var spriteId in sprites) {
 		var sprite   = sprites[spriteId];
 
 		if (sprite.isImage) {

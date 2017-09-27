@@ -38,10 +38,6 @@ function Jeff(options) {
 	this._swfObjectsPerFileGroup = undefined; // Array holding swf objects per file
 	this._swfObjects             = undefined; // Merged swf objects
 
-	this._symbolList             = undefined; // List of symbols to extract
-	this._spriteList             = undefined;
-	this._itemList               = undefined;
-
 	this._symbols                = undefined; // Symbols corresponding to the swfObjects
 	this._sprites                = undefined;
 	this._items                  = undefined;
@@ -67,9 +63,9 @@ function JeffOptions(params) {
 	this.createAtlas         = params.createAtlas         || false;
 	this.powerOf2Images      = params.powerOf2Images      || false;
 	this.maxImageDim         = params.maxImageDim         || 2048;
-	this.simplify            = params.simplify            || false;
 	this.beautify            = params.beautify            || false;
 	this.flatten             = params.flatten             || false;
+	this.prerenderBlendings  = params.prerenderBlendings  || false;
 
 	// Advanced options
 	this.exportAtRoot        = params.exportAtRoot        || false;
@@ -117,11 +113,6 @@ function JeffOptions(params) {
 
 	// Checking for uncompatible options
 	if (this.renderFrames) {
-		if (this.simplify) {
-			this.simplify = false;
-			// console.warn('[Jeff] Option to simplify will be ignored');
-		}
-
 		if (this.flatten) {
 			this.flatten = false;
 			// console.warn('[Jeff] Option to flatten will be ignored');
@@ -308,20 +299,16 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 		function (classGroup, nextClassListCb) {
 			self._classGroupName = classGroup.name;
 			self._classGroupList = classGroup.list;
-			self._itemList = helper.generateExportList(self._items, self._classGroupList, self._options.attributeFilter);
-			self._symbolList = [];
-			self._spriteList = [];
-			for (var i = 0; i < self._itemList.length; i += 1) {
-				var itemId = self._itemList[i];
-				if (self._symbols[itemId]) {
-					self._symbolList.push(itemId);
-				} else if (self._sprites[itemId]) {
-					self._spriteList.push(itemId);
-				}
-			}
+			var itemList = helper.generateExportList(self._items, self._classGroupList, self._options.attributeFilter);
+
+			// Removing unnecessary elements from sprites and symbols
+			for (var spriteId in self._sprites) { if (!itemList[spriteId]) { delete self._sprites[spriteId]; } }
+			for (var symbolId in self._symbols) { if (!itemList[symbolId]) { delete self._symbols[symbolId]; } }
+
 			self._renderer.renderSymbols(self,
 				function (imageMap, spriteProperties) {
-					self._extractClassGroup(imageMap, spriteProperties, nextClassListCb);
+					self._extractClassGroup(imageMap, spriteProperties);
+					nextClassListCb();
 				}
 			);
 		},
@@ -329,38 +316,114 @@ Jeff.prototype._processFileGroup = function (nextGroupCb) {
 	);
 };
 
-Jeff.prototype._extractClassGroup = function (imageMap, spriteProperties, nextClassListCb) {
-	var imageNames = this._generateImageNames(imageMap);
-	var data = this._generateExportData(spriteProperties, imageNames);
-	if (this._options.writeToDisk) {
-		this._writeImagesToDisk(imageMap, imageNames);
-		if (!this._options.ignoreData) {
-			this._writeDataToDisk(data);
+Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
+	// Constructing symbols data that will be included in the export
+	var exportItemsData;
+	if (this._options.renderFrames) {
+		exportItemsData = helper.generateFrameByFrameData(this._symbols, spriteProperties, this._options.onlyOneFrame);
+	} else {
+
+		// TODO: loop over optimization as long as they can be performed?
+		var optimized = false;
+		// var optimized = true;
+		// while (optimized) {
+		// 	optimized = false;
+
+			if (this._options.flatten) {
+				var nbSymbolsBefore = Object.keys(this._symbols).length;
+				this._symbols = helper.flattenAnimations(this._symbols, this._sprites);
+				var flattened = nbSymbolsBefore > Object.keys(this._symbols).length;
+				optimized = optimized || flattened;
+			}
+
+			var simplified = helper.simplifyAnimation(this._symbols, this._sprites, this._items.length);
+			optimized = optimized || simplified;
+
+			var prerendered = this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
+			optimized = optimized || prerendered;
+		// }
+
+
+		exportItemsData = helper.generateMetaData(this._sprites, this._symbols, spriteProperties, this._frameRate);
+	}
+
+	// Applying post-process, if any
+	if (this._options.postProcess) {
+		if (this._options.postProcess instanceof Array) {
+			var nProcesses = this._options.postProcess.length;
+			for (var p = 0; p < nProcesses; p += 1) {
+				this._options.postProcess[p](exportItemsData, this._items, this._symbols, this._sprites);
+			}
+		} else {
+			this._options.postProcess(exportItemsData, this._items, this._symbols, this._sprites);
 		}
+	}
+
+	// Constructing metadata
+	var exportData = {
+		meta: {
+			app: 'https://www.npmjs.com/package/jeff',
+			version: packageJson.version,
+			frameRate:        this._frameRate,
+			scale:            this._options.ratio,
+			filtering:       [this._options.minificationFilter, this._options.magnificationFilter],
+			mipmapCompatible: this._options.powerOf2Images,
+			prerendered:      this._options.renderFrames ? true : false
+		}
+	};
+
+	var imageArray = [];
+	if (!this._options.ignoreImages) {
+		var spritesImages = helper.formatSpritesForExport(
+			spriteImages,
+			spriteProperties,
+			this._options.createAtlas,
+			this._options.powerOf2Images,
+			this._options.maxImageDim,
+			this._classGroupName
+		);
+
+		// Making link between sprites and images
+		var images = new Array(spritesImages.length);
+		var sprites = exportItemsData.sprites;
+		for (var i = 0; i < spritesImages.length; i += 1) {
+			var spritesImage = spritesImages[i];
+			var alias = this._generateImageName(spritesImage.name);
+			images[i] = alias;
+			spritesImage.name = alias;
+
+			var spriteIds = spritesImage.sprites;
+			for (var s = 0; s < spriteIds.length; s += 1) {
+				var spriteId = spriteIds[s];
+				sprites[spriteId].image = i;
+			}
+
+			imageArray[i] = spritesImage.image;
+		}
+
+		this._writeImagesToDisk(spritesImages);
+
+		exportData.images = images;
+	}
+
+	exportData.sprites = exportItemsData.sprites;
+	exportData.symbols = exportItemsData.symbols;
+
+	if (!this._options.renderFrames) {
+		helper.delocateMatrices(exportData);
+	}
+
+	if (!this._options.ignoreData) {
+		// console.error('data!', exportData)
+		this._writeDataToDisk(exportData);
 	}
 
 	if (this._options.returnData) {
 		this._extractedData.push({
-			imageNames: imageNames,
-			images: imageMap,
-			data: data
+			images: imageArray,
+			data: exportData
 		});
 	}
-
-	nextClassListCb();
-};
-
-Jeff.prototype._generateImageNames = function (imageMap) {
-	var imageNames = {};
-	if (this._options.ignoreImages) {
-		return imageNames;
-	}
-
-	for (var id in imageMap) {
-		imageNames[id] = this._generateImageName(id);
-	}
-
-	return imageNames;
 };
 
 Jeff.prototype._generateImageName = function (imgName) {
@@ -370,9 +433,7 @@ Jeff.prototype._generateImageName = function (imgName) {
 		imgPath = path.join(imgPath, this._classGroupName);
 	}
 
-	// TODO: find a more elegant way to deal with this case: may be add an option to remove any suffix?
-	// Issue: we have image name resolution in 2 places
-	// Also see CanvasRenderer.renderFrames (renderImages file) for canvasName resolution
+	// TODO: find a more elegant way to deal with this case
 	if (!this._options.createAtlas && (!this._options.onlyOneFrame || Object.keys(this._classGroupList).length > 1)) {
 		// The image is not unique, its name would have to be more specific
 		imgPath = path.join(imgPath, imgName);
@@ -385,15 +446,11 @@ Jeff.prototype._generateImageName = function (imgName) {
 	return imgPath + '.png';
 };
 
-Jeff.prototype._writeImagesToDisk = function (imageMap, imageNames) {
-	var images = {};
-	for (var id in imageMap) {
-		var imageName = path.join(this._options.outDir, imageNames[id]);
-		images[imageName] = imageMap[id];
-	}
-
-	for (var name in images) {
-		this._canvasToPng(name, images[name]);
+Jeff.prototype._writeImagesToDisk = function (spritesImages) {
+	for (var i = 0; i < spritesImages.length; i += 1) {
+		var spritesImage = spritesImages[i];
+		var imagePath = path.join(this._options.outDir, spritesImage.name);
+		this._canvasToPng(imagePath, spritesImage.image);
 	}
 };
 
@@ -411,85 +468,6 @@ Jeff.prototype._canvasToPng = function (pngName, canvas) {
 	if (!this._options.customWriteFile || !this._options.customWriteFile(pngName, png)) {
 		writeFile(pngName, png);
 	}
-};
-
-Jeff.prototype._generateExportData = function (spriteProperties, imageNames) {
-	var nbItems = this._items.length;
-
-	var useAtlas = this._options.createAtlas;
-
-	var imageIndexes = null;
-	var images = [];
-	if (!this._options.ignoreImages) {
-		var imageIds = Object.keys(imageNames);
-		var i, spriteId;
-		imageIndexes = {};
-		if (useAtlas) {
-			for (i = 0; i < imageIds.length; i += 1) {
-				spriteId = imageIds[i];
-				imageIndexes[spriteId] = 0;
-			}
-			images[0] = imageNames[imageIds[0]];
-		} else {
-			for (i = 0; i < imageIds.length; i += 1) {
-				spriteId = imageIds[i];
-				imageIndexes[spriteId] = i;
-				images[i] = imageNames[spriteId];
-			}
-		}
-	}
-
-	// Constructing symbols data that will be included in the export
-	var exportItemsData;
-	if (this._options.renderFrames) {
-		exportItemsData = helper.generateFrameByFrameData(this._symbols, this._symbolList, imageIndexes, spriteProperties, this._options.onlyOneFrame, this._options.createAtlas, nbItems);
-	} else {
-		exportItemsData = helper.generateMetaData(this._sprites, this._spriteList, imageIndexes, this._symbols, this._symbolList, spriteProperties, useAtlas, this._frameRate);
-	}
-
-	// Applying post-process, if any
-	if (this._options.postProcess) {
-		if (this._options.postProcess instanceof Array) {
-			var nProcesses = this._options.postProcess.length;
-			for (var p = 0; p < nProcesses; p += 1) {
-				this._options.postProcess[p](exportItemsData, this._items, this._symbols, this._sprites);
-			}
-		} else {
-			this._options.postProcess(exportItemsData, this._items, this._symbols, this._sprites);
-		}
-	}
-
-	if (this._options.ignoreData) {
-		return;
-	}
-
-	// Constructing metadata of conversion properties (for importing purpose)
-	var exportData = {
-		meta: {
-			app: 'https://www.npmjs.com/package/jeff',
-			version: packageJson.version,
-			frameRate: this._frameRate,
-			scale: this._options.ratio,
-			filtering: [this._options.minificationFilter, this._options.magnificationFilter],
-			mipmapCompatible: this._options.powerOf2Images,
-			prerendered: this._options.renderFrames ? true : false
-		},
-		images: images
-	};
-
-	if (!this._options.renderFrames) {
-		if (this._options.flatten)  { helper.flattenAnimations(exportItemsData); }
-		if (this._options.simplify) { helper.simplifyAnimation(exportItemsData, nbItems); }
-	}
-
-	exportData.sprites = exportItemsData.sprites;
-	exportData.symbols = exportItemsData.symbols;
-
-	if (!this._options.renderFrames) {
-		helper.delocateMatrices(exportData);
-	}
-
-	return exportData;
 };
 
 Jeff.prototype._writeDataToDisk = function (data) {

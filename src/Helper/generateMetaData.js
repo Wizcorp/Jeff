@@ -1,31 +1,17 @@
 
-function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList, spriteProperties, useAtlas, frameRate) {
+function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 	var s;
 
 	var spritesData = {};
-	for (s = 0; s < spriteList.length; s += 1) {
-		var spriteId = spriteList[s];
-		var sprite   = sprites[spriteId];
-
+	for (var spriteId in sprites) {
 		var properties = spriteProperties[spriteId];
 		if (properties) {
 			var spriteData = {
 				x: -properties.x,
 				y: -properties.y,
 				w: properties.w,
-				h: properties.h,
+				h: properties.h
 			};
-
-			if (useAtlas) {
-				spriteData.sx = properties.sx;
-				spriteData.sy = properties.sy;
-				spriteData.sw = properties.sw;
-				spriteData.sh = properties.sh;
-			}
-
-			if (imageIndexes) {
-				spriteData.image = useAtlas ? 0 : imageIndexes[spriteId];
-			}
 
 			if (properties.margin) {
 				spriteData.margin = properties.margin;
@@ -37,9 +23,8 @@ function generateMetaData(sprites, spriteList, imageIndexes, symbols, symbolList
 
 
 	var symbolsData = {};
-	for (s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
+	for (var symbolId in symbols) {
+		var symbol = symbols[symbolId];
 		var symbolData = {
 			children: JSON.parse(JSON.stringify(symbol.children)),
 			frameCount: symbol.frameCount

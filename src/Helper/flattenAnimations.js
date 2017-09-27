@@ -1,6 +1,10 @@
 
 function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 	/* jshint maxstatements: 100 */
+
+	// Moving any element that is not referenced by a className up the heirarchy
+	// by precomputing its transformation in each animation it appears in
+
 	var id = instance.id;
 	if (sprites[id]) {
 		return [JSON.parse(JSON.stringify(instance))];
@@ -54,7 +58,7 @@ function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 
 		var childTransforms = childInstance.transforms;
 		var childColors     = childInstance.colors;
-		var childFrameCount   = childInstance.frames[1] - childInstance.frames[0] + 1;
+		var childFrameCount = childInstance.frames[1] - childInstance.frames[0] + 1;
 
 		var newTransforms   = [];
 		var newColors       = [];
@@ -156,14 +160,7 @@ function flattenInstance(symbols, sprites, instance, symbolListFlat) {
 	return flattenedChildren;
 }
 
-function flattenAnimations(itemsData) {
-
-	var symbols = itemsData.symbols;
-	var sprites = itemsData.sprites;
-
-	var symbolListFlat = {};
-	itemsData.symbols = symbolListFlat;
-
+function flattenAnimations(symbols, sprites) {
 	var id, symbol;
 
 	// Making list of classes
@@ -175,8 +172,12 @@ function flattenAnimations(itemsData) {
 		}
 	}
 
-	// var unflattenedSymbols = [];
+	var symbolListFlat = {};
 	for (id in classes) {
+		if (symbolListFlat[id]) {
+			continue;
+		}
+
 		symbol = symbols[id];
 		var children = symbol.children;
 		var newChildren = [];
@@ -187,6 +188,7 @@ function flattenAnimations(itemsData) {
 		symbolListFlat[id] = symbol;
 	}
 
+	return symbolListFlat;
 }
 
 module.exports = flattenAnimations;

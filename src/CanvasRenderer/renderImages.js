@@ -1,5 +1,8 @@
 var getCanvas      = require('./GetCanvas');
 var CanvasRenderer = require('./main');
+var elements       = require('../elements/');
+
+var Sprite = elements.Sprite;
 
 // margin between assets in atlasmaps
 var MARGIN = 1;
@@ -164,12 +167,10 @@ CanvasRenderer.prototype._setSpriteDimensions = function (sprites, spriteMaxDims
 
 CanvasRenderer.prototype._getSpritesToRender = function () {
 	var sprites = this._extractor._sprites;
-	var spriteList = this._extractor._spriteList;
 	var images = this._images;
 	var spritesToRender = {};
-	for (var s = 0; s < spriteList.length; s += 1) {
-		var spriteId = spriteList[s];
-		var sprite   = sprites[spriteId];
+	for (var spriteId in sprites) {
+		var sprite = sprites[spriteId];
 		if (sprite.isImage) {
 			var image = images[spriteId];
 			if (!image) {
@@ -182,7 +183,7 @@ CanvasRenderer.prototype._getSpritesToRender = function () {
 	return spritesToRender;
 };
 
-CanvasRenderer.prototype._renderSprites = function (sprites, spriteDims, canvasses) {
+CanvasRenderer.prototype._renderSprites = function (sprites, spriteDims, imageMap) {
 	for (var id in sprites) {
 		var canvas  = getCanvas();
 		var context = canvas.getContext('2d');
@@ -206,30 +207,78 @@ CanvasRenderer.prototype._renderSprites = function (sprites, spriteDims, canvass
 			context.drawImage(image, - dimensions.dx, - dimensions.dy, dimensions.sw, dimensions.sh);
 		}
 
-		canvasses[id] = canvas;
+		imageMap[id] = canvas;
 	}
 };
 
-CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) {
-	var identityMatrix = [1, 0, 0, 1, 0, 0];
-	var identityColor  = [1, 1, 1, 1, 0, 0, 0, 0];
+function SymbolInstance(id, bounds) {
+	this.id = id;
+	this.bounds = bounds;
+	this.transforms = [];
+	this.colors     = [];
+}
+
+SymbolInstance.prototype.identityTransform = [1, 0, 0, 1, 0, 0];
+SymbolInstance.prototype.identityColor     = [1, 1, 1, 1, 0, 0, 0, 0];
+
+SymbolInstance.prototype.constructFrame = function (frame, ratio, fixedSize) {
+	var frameBounds = this.bounds[frame];
+	if (!frameBounds) {
+		return null;
+	}
+
+	var x = frameBounds.left;
+	var y = frameBounds.top;
+	var w = frameBounds.right  - frameBounds.left;
+	var h = frameBounds.bottom - frameBounds.top;
+
+	var ratioW = ratio;
+	var ratioH = ratio;
+	if (fixedSize) {
+		ratioW *= fixedSize.width  / w;
+		ratioH *= fixedSize.height / h;
+	}
+
+	var canvas = getCanvas();
+	canvas.width  = Math.ceil(ratioW * w);
+	canvas.height = Math.ceil(ratioH * h);
+
+	if (canvas.width === 0 || canvas.height === 0) {
+		return null;
+	}
+
+	this.transforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
+	this.colors[frame]     = this.identityColor;
+
+	return {
+		x: x, y: y,
+		w: w, h: h,
+		canvas: canvas,
+		context: canvas.getContext('2d')
+	};
+};
+
+CanvasRenderer.prototype._getSymbolInstance = function (id, bounds) {
+	return new SymbolInstance(id, bounds);
+};
+
+CanvasRenderer.prototype._renderFrames = function (imageMap, spriteProperties) {
+
+	var fixedSize = this._options.fixedSize;
+	var ratio     = this._extractor._fileGroupRatio;
 
 	for (var className in this._extractor._classGroupList) {
 
-		var classId   = this._extractor._classGroupList[className];
-		var symbol    = this._extractor._symbols[classId];
-		var ratio     = this._extractor._fileGroupRatio;
-		var fixedSize = this._options.fixedSize;
-
-		var frameCount     = symbol.frameCount;
-		var animColors     = [];
-		var animTransforms = [];
-		var animInstance   = { id: classId, colors: animColors, transforms: animTransforms };
+		var classId = this._extractor._classGroupList[className];
+		var symbol  = this._extractor._symbols[classId];
 
 		var bounds = symbol.containerBounds || symbol.bounds;
 		if (!bounds) {
 			continue;
 		}
+
+		var frameCount = symbol.frameCount;
+		var instance = new SymbolInstance(classId, bounds);
 
 		var f, frames = [];
 		if (this._options.renderFrames instanceof Array) {
@@ -246,86 +295,39 @@ CanvasRenderer.prototype._renderFrames = function (canvasses, spriteProperties) 
 
 		var nFrames = frames.length;
 		for (f = 0; f < nFrames; f += 1) {
-			var frame   = frames[f];
-			var canvas  = getCanvas();
-			var context = canvas.getContext('2d');
+			var frame = frames[f];
 
-			var frameBounds = bounds[frame];
-			if (!frameBounds) {
+			var frameCanvas = instance.constructFrame(frame, ratio, fixedSize);
+			if (!frameCanvas) {
 				continue;
 			}
 
-			var x = frameBounds.left;
-			var y = frameBounds.top;
-			var w = frameBounds.right  - frameBounds.left;
-			var h = frameBounds.bottom - frameBounds.top;
+			var canvas = frameCanvas.canvas;
+			var context = frameCanvas.context;
+			this._renderSymbol(canvas, context, instance.identityTransform, instance.identityColor, instance, frame, false);
 
-			var ratioW = ratio;
-			var ratioH = ratio;
-			if (fixedSize) {
-				ratioW *= fixedSize.width  / w;
-				ratioH *= fixedSize.height / h;
-			}
-
-			canvas.width  = Math.ceil(ratioW * w);
-			canvas.height = Math.ceil(ratioH * h);
-
-			if (canvas.width === 0 || canvas.height === 0) {
-				continue;
-			}
-
-			animColors[frame]     = identityColor;
-			animTransforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
-			this._renderSymbol(canvas, context, identityMatrix, identityColor, animInstance, frame, false);
-
-			// TODO: find a more elegant way to deal with the 'only one frame' case: may be add an option to remove any suffix?
-			// Issue: we have image name resolution in 2 places (see Jeff._generateImageName in jeff/index.js file)
-			var canvasName = this._options.onlyOneFrame ? symbol.className : symbol.frameNames[frame];
-			canvasses[canvasName] = canvas;
-			spriteProperties[canvasName] = {
-				x: x, y: y,
-				w: w, h: h,
+			var frameId = this._options.onlyOneFrame ? symbol.className : symbol.frameNames[frame];
+			imageMap[frameId] = canvas;
+			spriteProperties[frameId] = {
+				x: frameCanvas.x,
+				y: frameCanvas.y,
+				w: frameCanvas.w,
+				h: frameCanvas.h,
 				sx: 0, sy: 0,
 				sw: canvas.width,
 				sh: canvas.height,
-				margin: MARGIN
+				margin: MARGIN,
+				frameId: frameId
 			};
 		}
 	}
 };
 
-function nextHighestPowerOfTwo(x) {
-	x -= 1;
-	for (var i = 1; i < 32; i <<= 1) {
-		x = x | x >> i;
-	}
-	return x + 1;
-}
-
-function augmentToNextPowerOf2(canvasses) {
-	for (var imageName in canvasses) {
-		var canvas = canvasses[imageName];
-		var width  = nextHighestPowerOfTwo(canvas.width);
-		var height = nextHighestPowerOfTwo(canvas.height);
-
-		// Creating a canvas with power of 2 dimensions
-		var po2Canvas  = getCanvas();
-		var po2Context = po2Canvas.getContext('2d');
-		po2Canvas.width  = width;
-		po2Canvas.height = height;
-		po2Context.drawImage(canvas, 0, 0);
-
-		// Replacing non-power of 2 canvas by power of 2 canvas
-		canvasses[imageName] = po2Canvas;
-	}
-}
-
-CanvasRenderer.prototype._renderImages = function (retry) {
-	var imageMap  = [];
-	var canvasses = {};
+CanvasRenderer.prototype._renderImages = function () {
+	var imageMap = {};
 	var spriteProperties = {};
 	if (this._options.renderFrames) {
-		this._renderFrames(canvasses, spriteProperties);
+		this._renderFrames(imageMap, spriteProperties);
 	} else {
 		// 1 - Generating list of sprites to render
 		var sprites = this._getSpritesToRender();
@@ -336,46 +338,8 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 		// 3 - Computing sprite dimensions with respect to their maximum dimensions and required ratios
 		spriteProperties = this._setSpriteDimensions(sprites, spriteMaxDims);
 
-		// 4 - Rendering sprites in canvasses
-		this._renderSprites(sprites, spriteProperties, canvasses);
-	}
-
-	if (this._options.createAtlas) {
-		var atlas = this._renderAtlas(canvasses, spriteProperties);
-		if (atlas) {
-			// imageList = [{ img: atlas, name: 'atlas' }];
-			var spriteList = this._extractor._spriteList;
-			for (var s = 0; s < spriteList.length; s += 1) {
-				imageMap[spriteList[s]] = atlas;
-			}
-		} else {
-			// TODO: add an option to let the user choose whether he wants to create
-			// several atlases or reduce the asset sizes when this situation happens
-
-			// Atlas could not be extracted at current ratio
-			// Reducing extraction ratio and attempting rendering once more
-			this._extractor._fileGroupRatio *= 0.9;
-			var nbRetries = retry || 0;
-			return this._renderImages(nbRetries + 1);
-		}
-
-		if (retry) {
-			console.warn(
-				'[CanvasRenderer.renderImages] Atlas created with ratio ' + this._extractor._fileGroupRatio +
-				' because it did not fit into the required dimensions.' +
-				'(File Group ' + this._extractor._fileGroupName + ', Class ' + this._extractor._classGroupName + ')'
-			);
-		}
-
-	} else {
-		if (this._options.powerOf2Images) {
-			augmentToNextPowerOf2(canvasses);
-		}
-
-		imageMap = canvasses;
-		// for (var imageName in canvasses) {
-		// 	imageList.push({ name: imageName, img: canvasses[imageName] });
-		// }
+		// 4 - Rendering sprites and storing in imageMap
+		this._renderSprites(sprites, spriteProperties, imageMap);
 	}
 
 	// End of the rendering
@@ -384,4 +348,117 @@ CanvasRenderer.prototype._renderImages = function (retry) {
 	if (this._callback) {
 		this._callback(imageMap, spriteProperties);
 	}
+};
+
+
+CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap, spriteProperties) {
+	// Prerendering symbols when possible for optimized runtime performance
+	var ratio = this._extractor._fileGroupRatio;
+	var prerenderBlendings = this._extractor._options.prerenderBlendings;
+	var prerendered = false;
+
+	var symbol, symbolId;
+	var c, child, children, childId, childSprite;
+	for (symbolId in symbols) {
+		symbol = symbols[symbolId];
+
+		if (symbol.frameCount !== 1) {
+			continue;
+		}
+
+		var bounds = symbol.containerBounds || symbol.bounds;
+		if (!bounds) {
+			continue;
+		}
+
+		var frame = 0;
+		var instance = this._getSymbolInstance(symbolId, bounds);
+		var frameCanvas = instance.constructFrame(frame, ratio);
+		if (!frameCanvas) {
+			continue;
+		}
+
+		// prerendering only if all children are sprites with no class identification
+		var isUncompatible = false;
+		children = symbol.children;
+		for (c = 0; c < children.length; c += 1) {
+			child = children[c];
+			if (child.blendModes && !prerenderBlendings) {
+				isUncompatible = true;
+				break;
+			}
+
+			childId = child.id;
+			childSprite = sprites[child.id];
+			if (!childSprite) {
+				isUncompatible = true;
+				break;
+			}
+
+			if (childSprite.className) {
+				isUncompatible = true;
+				break;
+			}
+		}
+
+		if (isUncompatible) {
+			continue;
+		}
+
+		var canvas = frameCanvas.canvas;
+		var context = frameCanvas.context;
+		this._renderSymbol(canvas, context, instance.identityTransform, instance.identityColor, instance, frame, false);
+
+		imageMap[symbolId] = canvas;
+		spriteProperties[symbolId] = {
+			x: frameCanvas.x,
+			y: frameCanvas.y,
+			w: frameCanvas.w,
+			h: frameCanvas.h,
+			sx: 0, sy: 0,
+			sw: canvas.width,
+			sh: canvas.height,
+			margin: MARGIN
+		};
+
+		// Creating sprite replacing symbol
+		var sprite = new Sprite();
+		sprite.id = symbolId;
+		sprite.isImage = true;
+		sprite.className = symbol.className;
+		var right = frameCanvas.x + frameCanvas.w;
+		var bottom = frameCanvas.y + frameCanvas.h;
+		sprite.bounds = symbol.bounds;
+		sprites[symbolId] = sprite;
+		this._images[symbolId] = canvas;
+
+		delete symbols[symbolId];
+
+		prerendered = true;
+	}
+
+	// removing unused sprites
+	var subsistingSprites = {};
+	for (symbolId in symbols) {
+		symbol = symbols[symbolId];
+		children = symbol.children;
+		for (c = 0; c < children.length; c += 1) {
+			child = children[c];
+			childId = child.id;
+			childSprite = sprites[childId];
+			if (childSprite) {
+				subsistingSprites[childId] = true;
+			}
+		}
+	}
+
+	for (var spriteId in sprites) {
+		if (!subsistingSprites[spriteId]) {
+			delete sprites[spriteId];
+			delete imageMap[spriteId];
+			delete spriteProperties[spriteId];
+		}
+	}
+
+	return prerendered;
 };

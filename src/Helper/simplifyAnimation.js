@@ -18,10 +18,7 @@ function isChildUsedElsewhere (childId, consideredSymbol, symbols) {
 }
 
 
-function simplifyAnimation(itemsData, nbItems) {
-	var symbols = itemsData.symbols;
-	var sprites = itemsData.sprites;
-	
+function simplifyAnimation(symbols, sprites, nbItems) {
 	// Getting rid of unnecessary animations
 	// i.e if an animation includes only one graphic
 	// and all its transformations are the identity
@@ -39,6 +36,10 @@ function simplifyAnimation(itemsData, nbItems) {
 		symbol = symbols[id];
 		if (symbol.children.length === 1) {
 			var child = symbol.children[0];
+
+			if (child.filters || child.blendModes) {
+				continue;
+			}
 
 			var discardable = true;
 			var transforms = child.transforms;
@@ -88,7 +89,6 @@ function simplifyAnimation(itemsData, nbItems) {
 					childItem.x -= tx;
 					childItem.y -= ty;
 
-					itemsData[newItemId] = childItem;
 					sprites[newItemId] = childItem;
 					childId = newItemId;
 					newItemId += 1;
@@ -97,7 +97,6 @@ function simplifyAnimation(itemsData, nbItems) {
 					childItem.x -= tx;
 					childItem.y -= ty;
 
-					itemsData[childId] = childItem;
 					sprites[childId] = childItem;
 				}
 
@@ -128,5 +127,6 @@ function simplifyAnimation(itemsData, nbItems) {
 		}
 	}
 
+	return Object.keys(replacements).length > 0;
 }
 module.exports = simplifyAnimation;

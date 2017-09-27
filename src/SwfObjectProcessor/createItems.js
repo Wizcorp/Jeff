@@ -1,59 +1,11 @@
 
 var processShape = require('./processShape');
+var elements = require('../elements/');
 
-function Dimensions () {
-	this.width  = 0;
-	this.height = 0;
-}
-
-function Bounds (left, right, top, bottom) {
-	this.left   = left;
-	this.right  = right;
-	this.top    = top;
-	this.bottom = bottom;
-}
-
-function Item () {
-	this.id = -1;
-
-	this.swfObject = null;
-	this.parents   = {};
-}
-
-function Sprite () {
-	Item.call(this);
-	this.maxDims = new Dimensions();
-
-	this.isImage    = false;
-	this.isShape    = false;
-	this.isMorphing = false;
-
-	this.bounds = null;
-	this.shapes = null;
-	this.images = null;
-}
-
-Sprite.prototype.isSprite = true;
-
-function Symbol (frameCount, frameRate, frameSize) {
-	Item.call(this);
-	this.frameCount = frameCount;
-	this.frameRate = frameRate;
-	this.frameSize = frameSize;
-	this.scalingGrid = null;
-	this.children = [];
-	this.bounds = [];
-}
-
-Symbol.prototype.isSymbol = true;
-
-function UnhandledItem () {
-	Item.call(this);
-
-	this.unhandled = true;
-}
-
-UnhandledItem.prototype.isUnhandled = true;
+var Bounds = elements.Bounds;
+var Sprite = elements.Sprite;
+var Symbol = elements.Symbol;
+var UnhandledItem = elements.UnhandledItem;
 
 function createItem(id, swfObject) {
 	var item;

@@ -76,7 +76,7 @@ function applyTint(context, tint, dim, bounds) {
 }
 
 CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, parentTransform, parentColor, instance, frame, isMask) {
-	/* jshint maxcomplexity: 50 */
+	/* jshint maxcomplexity: 60 */
 	/* jshint maxstatements: 150 */
 
 	// Rendering the first frame, thus getting data of index 0
@@ -91,45 +91,16 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 	var id = instance.id;
 
 	var sprite = this._extractor._sprites[id];
-	if (sprite) {
-		if (sprite.isShape) {
-			globalContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
-
-			// Transformation is applied within the drawshape function
-			this._drawShapes(sprite.shapes, globalCanvas, globalContext, matrix, isMask);
-		}
-
-		if (sprite.isImage) {
-			globalContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
-			globalContext.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
-
-			var image = this._images[id];
-			if (isMask) {
-				// If it is a mask, the rendered image should be a completely opaque rectangle
-				globalContext.globalAlpha = 1;
-				globalContext.fillStyle = '#ffffff';
-				globalContext.fillRect(0, 0, image.width, image.height);
-			} else {
-				globalContext.drawImage(image, 0, 0, image.width, image.height);
-			}
-		}
-
-		return;
-	}
-
 	var symbol = this._extractor._symbols[id];
-	if (!symbol) {
-		// symbol not found in symbols!
+	if (!sprite && !symbol) {
+		// element not found!
 		return;
 	}
-
-	frame = frame % symbol.frameCount;
 
 	// Checking for pixel operations
 	var hasTint   = (tint[0] !== 1) || (tint[1] !== 1) || (tint[2] !== 1) || (tint[4] !== 0) || (tint[5] !== 0) || (tint[6] !== 0);
 	var hasFilter = appliedFilters ? (appliedFilters.length > 0) : false;
 	var hasBlend  = (blendMode && (2 <= blendMode && blendMode <= 14)) ? true : false;
-
 	var hasPixelManipulation = hasTint || hasFilter || hasBlend;
 
 	var localCanvas, localContext;
@@ -144,66 +115,95 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 		localContext = globalContext;
 	}
 
-	var children = symbol.children;
-	for (var c = children.length - 1; c >= 0; c -= 1) {
-		var child = children[c];
+	if (sprite) {
+		if (sprite.isShape) {
+			localContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
 
-		if (frame < child.frames[0] || child.frames[1] < frame || child.maskEnd) {
-			// Child is not visible at given frame
-			continue;
+			// Transformation is applied within the drawshape function
+			this._drawShapes(sprite.shapes, localCanvas, localContext, matrix, isMask);
 		}
 
-		if (child.maskStart) {
-			// Masking
+		if (sprite.isImage) {
+			localContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
+			localContext.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
 
-			// Creating an intermediary canvas to apply the mask
-			var maskCanvas  = getCanvas();
-			var maskContext = maskCanvas.getContext('2d');
+			var image = this._images[id];
+			if (isMask) {
+				// If it is a mask, the rendered image should be a completely opaque rectangle
+				localContext.globalAlpha = 1;
+				localContext.fillStyle = '#ffffff';
+				localContext.fillRect(0, 0, image.width, image.height);
+			} else {
+				localContext.drawImage(image, 0, 0, image.width, image.height);
+			}
+		}
+	}
 
-			maskCanvas.width  = localCanvas.width;
-			maskCanvas.height = localCanvas.height;
+	if (symbol) {
+		var children = symbol.children;
+		frame = frame % symbol.frameCount;
+		for (var c = children.length - 1; c >= 0; c -= 1) {
+			var child = children[c];
 
-			this._renderSymbol(maskCanvas, maskContext, matrix, color, child, frame - child.frames[0], true);
-
-			var clipCanvas  = getCanvas();
-			var clipContext = clipCanvas.getContext('2d');
-
-			clipCanvas.width  = localCanvas.width;
-			clipCanvas.height = localCanvas.height;
-
-			// To support masked layers with blend mode
-			clipContext.drawImage(localCanvas, 0, 0);
-
-			// Rendering all the children that are meant to be clipped
-			var clipDepth = child.clipDepth;
-			while (!children[--c].maskEnd) {
-				var clippedChild = children[c];
-				if (clippedChild.frames[0] <= frame && frame <= clippedChild.frames[1]) {
-					this._renderSymbol(clipCanvas, clipContext, matrix, color, clippedChild, frame - clippedChild.frames[0], isMask);
-				}
+			if (frame < child.frames[0] || child.frames[1] < frame || child.maskEnd) {
+				// Child is not visible at given frame
+				continue;
 			}
 
-			// Setting the global composite operation that is equivalent to applying a mask
-			clipContext.globalCompositeOperation = 'destination-in';
+			if (child.maskStart) {
+				// Masking
 
-			// Applying mask
-			clipContext.globalAlpha = 1;
-			clipContext.setTransform(1, 0, 0, 1, 0, 0);
-			clipContext.drawImage(maskCanvas, 0, 0);
+				// Creating an intermediary canvas to apply the mask
+				var maskCanvas  = getCanvas();
+				var maskContext = maskCanvas.getContext('2d');
 
-			// Rendering clipped elements onto final canvas
-			localContext.globalAlpha = 1;
-			localContext.setTransform(1, 0, 0, 1, 0, 0);
-			localContext.drawImage(clipCanvas, 0, 0);
-		} else {
-			this._renderSymbol(localCanvas, localContext, matrix, color, child, frame - child.frames[0], isMask);
+				maskCanvas.width  = localCanvas.width;
+				maskCanvas.height = localCanvas.height;
+
+				this._renderSymbol(maskCanvas, maskContext, matrix, color, child, frame - child.frames[0], true);
+
+				var clipCanvas  = getCanvas();
+				var clipContext = clipCanvas.getContext('2d');
+
+				clipCanvas.width  = localCanvas.width;
+				clipCanvas.height = localCanvas.height;
+
+				// To support masked layers with blend mode
+				clipContext.drawImage(localCanvas, 0, 0);
+
+				// Rendering all the children that are meant to be clipped
+				var clipDepth = child.clipDepth;
+				while (!children[--c].maskEnd) {
+					var clippedChild = children[c];
+					if (clippedChild.frames[0] <= frame && frame <= clippedChild.frames[1]) {
+						this._renderSymbol(clipCanvas, clipContext, matrix, color, clippedChild, frame - clippedChild.frames[0], isMask);
+					}
+				}
+
+				// Setting the global composite operation that is equivalent to applying a mask
+				clipContext.globalCompositeOperation = 'destination-in';
+
+				// Applying mask
+				clipContext.globalAlpha = 1;
+				clipContext.setTransform(1, 0, 0, 1, 0, 0);
+				clipContext.drawImage(maskCanvas, 0, 0);
+
+				// Rendering clipped elements onto final canvas
+				localContext.globalAlpha = 1;
+				localContext.setTransform(1, 0, 0, 1, 0, 0);
+				localContext.drawImage(clipCanvas, 0, 0);
+			} else {
+				this._renderSymbol(localCanvas, localContext, matrix, color, child, frame - child.frames[0], isMask);
+			}
 		}
 	}
 
 	if (hasPixelManipulation) {
-		var bbox = symbol.bounds[frame];
+		var elementBounds = symbol ? symbol.bounds : sprite.bounds;
+		var bbox = elementBounds instanceof Array ? elementBounds[frame] : elementBounds;
+
 		if (!bbox) {
-			// console.warn(symbol.id, 'has no bounds!');
+			// console.warn(element.id, 'has no bounds!');
 			return;
 		}
 

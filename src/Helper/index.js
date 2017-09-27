@@ -11,3 +11,4 @@ module.exports.groupFiles               = require('./groupFiles.js');
 module.exports.flattenAnimations        = require('./flattenAnimations.js');
 module.exports.simplifyAnimation        = require('./simplifyAnimation.js');
 module.exports.delocateMatrices         = require('./delocateMatrices.js');
+module.exports.formatSpritesForExport   = require('./formatSpritesForExport.js');

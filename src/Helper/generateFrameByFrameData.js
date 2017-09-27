@@ -1,25 +1,14 @@
 
-function populatePositions(symbol, positionData, imageId, imageIndexes, useAtlas) {
+function populatePositions(symbol, positionData, imageId) {
 	symbol.x = positionData.x;
 	symbol.y = positionData.y;
 	symbol.w = positionData.w;
 	symbol.h = positionData.h;
 
-	if (useAtlas) {
-		symbol.sx = positionData.sx;
-		symbol.sy = positionData.sy;
-		symbol.sw = positionData.sw;
-		symbol.sh = positionData.sh;
-	}
-
-	if (imageIndexes) {
-		symbol.image = useAtlas ? 0 : imageIndexes[imageId];
-	}
+	symbol.image = imageId;
 }
 
-function generateFrameByFrameData(symbols, symbolList, imageIndexes, spritesProperties, onlyOneFrame, useAtlas, nbItems) {
-	var newItemId = nbItems;
-
+function generateFrameByFrameData(symbols, spritesProperties, onlyOneFrame) {
 	var spritesData = {};
 	var symbolsData = {};
 	for (var id in symbols) {
@@ -39,7 +28,7 @@ function generateFrameByFrameData(symbols, symbolList, imageIndexes, spritesProp
 		}
 
 		if (onlyOneFrame) {
-			populatePositions(item, spritesProperties[className], id, imageIndexes, useAtlas);
+			populatePositions(item, spritesProperties[className], id);
 			spritesData[id] = item;
 		} else {
 			item.frameCount = symbol.frameCount;
@@ -50,13 +39,12 @@ function generateFrameByFrameData(symbols, symbolList, imageIndexes, spritesProp
 				var frameName  = frameNames[f];
 				var properties = spritesProperties[frameName];
 				if (properties) {
-					frames.push(newItemId);
+					var frameId = properties.frameId;
+					frames.push(frameId);
 
 					var childItem = {};
-					populatePositions(childItem, properties, frameName, imageIndexes, useAtlas);
-					spritesData[newItemId] = childItem;
-
-					newItemId += 1;
+					populatePositions(childItem, properties, frameName);
+					spritesData[frameId] = childItem;
 				}
 			}
 

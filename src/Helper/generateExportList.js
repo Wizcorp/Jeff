@@ -1,7 +1,7 @@
 
 
 function generateExportList(items, classList, attributeFilter) {
-	var itemList = [];
+	var itemList = {};
 
 	// Creating list of items to export
 	// Starting with the items corresponding to the classes to export
@@ -34,7 +34,7 @@ function generateExportList(items, classList, attributeFilter) {
 
 		// First time to visit the item
 		// Adding it to the list of symbols to export
-		itemList.push(itemId);
+		itemList[itemId] = true;
 
 		var item = items[itemId];
 		if (item.isSprite || item.unhandled) {

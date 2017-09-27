@@ -42,7 +42,7 @@ function blend(blendEquation, source, destination, dim, bounds) {
 
 		// To anyone who reads this comment
 		// if you know why this code works when raising to the power 4 (rather than 1?)
-		// let me know at bchevalier@wizcorp.jp
+		// let us know by posting on JEFF's github repo
 		var r = da + dz * Math.pow(da / (sa + da), 4);
 
 		dstData[i]     = (dr * sz + sa * blendEquation(sr, dr)) * r + (1 - r) * sr;
