@@ -232,22 +232,22 @@ SymbolInstance.prototype.constructFrame = function (frame, ratio, fixedSize) {
 	var w = frameBounds.right  - frameBounds.left;
 	var h = frameBounds.bottom - frameBounds.top;
 
-	var ratioW = ratio;
-	var ratioH = ratio;
+	var scaleX = ratio;
+	var scaleY = ratio;
 	if (fixedSize) {
-		ratioW *= fixedSize.width  / w;
-		ratioH *= fixedSize.height / h;
+		scaleX *= fixedSize.width  / w;
+		scaleY *= fixedSize.height / h;
 	}
 
 	var canvas = getCanvas();
-	canvas.width  = Math.ceil(ratioW * w);
-	canvas.height = Math.ceil(ratioH * h);
+	canvas.width  = Math.ceil(scaleX * w);
+	canvas.height = Math.ceil(scaleY * h);
 
 	if (canvas.width === 0 || canvas.height === 0) {
 		return null;
 	}
 
-	this.transforms[frame] = [ratioW, 0, 0, ratioH, - ratioW * frameBounds.left, - ratioH * frameBounds.top, 1];
+	this.transforms[frame] = [scaleX, 0, 0, scaleY, - scaleX * frameBounds.left, - scaleY * frameBounds.top];
 	this.colors[frame]     = this.identityColor;
 
 	return {
@@ -362,10 +362,6 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 	for (symbolId in symbols) {
 		symbol = symbols[symbolId];
 
-		if (symbol.frameCount !== 1) {
-			continue;
-		}
-
 		var bounds = symbol.containerBounds || symbol.bounds;
 		if (!bounds) {
 			continue;
@@ -379,11 +375,18 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 		}
 
 		// prerendering only if all children are sprites with no class identification
+		var frameCount = symbol.frameCount;
 		var isUncompatible = false;
 		children = symbol.children;
 		for (c = 0; c < children.length; c += 1) {
 			child = children[c];
 			if (child.blendModes && !prerenderBlendings) {
+				isUncompatible = true;
+				break;
+			}
+
+			var frames = child.frames;
+			if (frames[1] - frames[0] + 1 !== frameCount) {
 				isUncompatible = true;
 				break;
 			}
@@ -399,6 +402,47 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 				isUncompatible = true;
 				break;
 			}
+
+			var isChanged = false;
+			var transforms = child.transforms;
+			var modelTransform = transforms[0];
+			for (var t = 1; t < transforms.length && !isChanged; t += 1) {
+				var transform = transforms[t];
+				if (
+					transform[0] !== modelTransform[0] ||
+					transform[1] !== modelTransform[1] ||
+					transform[2] !== modelTransform[2] ||
+					transform[3] !== modelTransform[3] ||
+					transform[4] !== modelTransform[4] ||
+					transform[5] !== modelTransform[5]
+				) {
+					isChanged = true;
+				}
+			}
+
+			var colors = child.colors;
+			var modelColor = colors[0];
+			for (var co = 1; co < colors.length && !isChanged; co += 1) {
+				var color = colors[co];
+				if (
+					color[0] !== modelColor[0] ||
+					color[1] !== modelColor[1] ||
+					color[2] !== modelColor[2] ||
+					color[3] !== modelColor[3] ||
+					color[4] !== modelColor[4] ||
+					color[5] !== modelColor[5] ||
+					color[6] !== modelColor[6] ||
+					color[7] !== modelColor[7]
+				) {
+					isChanged = true;
+				}
+			}
+
+			if (isChanged) {
+				isUncompatible = true;
+				break;
+			}
+
 		}
 
 		if (isUncompatible) {
@@ -453,7 +497,8 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 	}
 
 	for (var spriteId in sprites) {
-		if (!subsistingSprites[spriteId]) {
+		sprite = sprites[spriteId];
+		if (!sprite.className && !subsistingSprites[spriteId]) {
 			delete sprites[spriteId];
 			delete imageMap[spriteId];
 			delete spriteProperties[spriteId];

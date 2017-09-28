@@ -324,25 +324,13 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 	} else {
 
 		// TODO: loop over optimization as long as they can be performed?
-		var optimized = false;
-		// var optimized = true;
-		// while (optimized) {
-		// 	optimized = false;
+		if (this._options.flatten) {
+			this._symbols = helper.flattenAnimations(this._symbols, this._sprites);
+		}
 
-			if (this._options.flatten) {
-				var nbSymbolsBefore = Object.keys(this._symbols).length;
-				this._symbols = helper.flattenAnimations(this._symbols, this._sprites);
-				var flattened = nbSymbolsBefore > Object.keys(this._symbols).length;
-				optimized = optimized || flattened;
-			}
+		// helper.simplifyAnimation(this._symbols, this._sprites, this._items.length);
 
-			var simplified = helper.simplifyAnimation(this._symbols, this._sprites, this._items.length);
-			optimized = optimized || simplified;
-
-			var prerendered = this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
-			optimized = optimized || prerendered;
-		// }
-
+		// this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
 
 		exportItemsData = helper.generateMetaData(this._sprites, this._symbols, spriteProperties, this._frameRate);
 	}

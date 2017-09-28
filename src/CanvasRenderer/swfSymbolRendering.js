@@ -115,6 +115,9 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 		localContext = globalContext;
 	}
 
+	var elementBounds = symbol ? symbol.bounds : sprite.bounds;
+	var bbox = elementBounds instanceof Array ? elementBounds[frame] : elementBounds;
+
 	if (sprite) {
 		if (sprite.isShape) {
 			localContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
@@ -128,13 +131,17 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 			localContext.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
 
 			var image = this._images[id];
+			var x = bbox.left;
+			var y = bbox.top;
+			var width  = bbox.right  - x;
+			var height = bbox.bottom - y;
 			if (isMask) {
 				// If it is a mask, the rendered image should be a completely opaque rectangle
 				localContext.globalAlpha = 1;
 				localContext.fillStyle = '#ffffff';
-				localContext.fillRect(0, 0, image.width, image.height);
+				localContext.fillRect(x, y, width, height);
 			} else {
-				localContext.drawImage(image, 0, 0, image.width, image.height);
+				localContext.drawImage(image, x, y, width, height);
 			}
 		}
 	}
@@ -199,8 +206,6 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 	}
 
 	if (hasPixelManipulation) {
-		var elementBounds = symbol ? symbol.bounds : sprite.bounds;
-		var bbox = elementBounds instanceof Array ? elementBounds[frame] : elementBounds;
 
 		if (!bbox) {
 			// console.warn(element.id, 'has no bounds!');

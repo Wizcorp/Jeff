@@ -126,7 +126,7 @@ function simplifyAnimation(symbols, sprites, nbItems) {
 			children[c1].id = replacedChildId;
 		}
 	}
-
+console.error('replacing!', replacements)
 	return Object.keys(replacements).length > 0;
 }
 module.exports = simplifyAnimation;

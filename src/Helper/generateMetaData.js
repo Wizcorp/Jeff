@@ -4,6 +4,7 @@ function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 
 	var spritesData = {};
 	for (var spriteId in sprites) {
+		var sprite = sprites[spriteId];
 		var properties = spriteProperties[spriteId];
 		if (properties) {
 			var spriteData = {
@@ -18,6 +19,10 @@ function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 			}
 
 			spritesData[spriteId] = spriteData;
+
+			if (sprite.className) {
+				spriteData.className = sprite.className;
+			}
 		}
 	}
 
