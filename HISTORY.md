@@ -1,5 +1,10 @@
 # Release history
 
+## v0.3.2
+Merged 0.2.10 fixes:
+- Framerate value in exported meta data is now matching original files framerate
+- Jeff version in exported meta data is now dynamic
+
 ## v0.3.1
 Merged 0.2.8 and 0.2.9 fixes:
 - Fixed rendering when masked layers have blend modes
@@ -7,6 +12,10 @@ Merged 0.2.8 and 0.2.9 fixes:
 
 ## v0.3.0
 Electron version
+
+## v0.2.10
+Framerate value in exported meta data is now matching original files framerate
+Jeff version in exported meta data is now dynamic
 
 ## v0.2.9
 Fixed rendering when masked layers have blend modes
