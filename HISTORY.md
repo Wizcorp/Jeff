@@ -1,5 +1,9 @@
 # Release history
 
+## v0.2.10
+Framerate value in exported meta data is now matching original files framerate
+Jeff version in exported meta data is now dynamic
+
 ## v0.2.9
 Fixed rendering when masked layers have blend modes
 
