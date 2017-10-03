@@ -961,7 +961,7 @@ SwfParser.prototype = {
 		offset = offset; //not used
 		len = len; //not used
 		var id = stream.readUI16();
-		var glyphs    = [];
+		var glyphs = [];
 		var codeTable = [];
 		var font = {
 			type: 'font',

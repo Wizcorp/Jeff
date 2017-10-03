@@ -12,8 +12,8 @@ var Bounds = elements.Bounds;
 
 CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
 	var spritesMaxDims = {};
-	var classRatios     = this._options.classRatios || {};
-	var hasFixedSize    = this._options.fixedSize !== undefined;
+	var classRatios    = this._options.classRatios || {};
+	var hasFixedSize   = this._options.fixedSize !== undefined;
 
 	var className;
 	var classGroupList = this._extractor._classGroupList;
@@ -46,10 +46,10 @@ CanvasRenderer.prototype._getMaxDimensions = function (sprites) {
 
 	var maxDimForClass, classRatio;
 	for (var id in sprites) {
-		var sprite   = sprites[id];
+		var sprite = sprites[id];
 		var maxWidth  = 0;
 		var maxHeight = 0;
-		var maxDims   = sprite.maxDims;
+		var maxDims = sprite.maxDims;
 		for (className in classGroupList) {
 
 			maxDimForClass = maxDims[className];

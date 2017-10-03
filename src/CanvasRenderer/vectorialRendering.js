@@ -102,10 +102,16 @@ CanvasRenderer.prototype._outlineShapes = function (context, shapes, transform, 
 
 	if (line.capStart) {
 		context.lineCap = line.capStart.toLowerCase();
+	} else {
+		// default
+		context.lineCap = 'round';
 	}
 
 	if (line.join) {
 		context.lineJoin = line.join.toLowerCase();
+	} else {
+		// default
+		context.lineJoin = 'round';
 	}
 
 	var s, color, alpha, scale, scaleX, scaleY;
