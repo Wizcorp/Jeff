@@ -31,11 +31,9 @@ CanvasRenderer.prototype._drawShapes = function (shapes, canvas, context, transf
 		var fills = shapes[idx].fills;
 		var lines = shapes[idx].lines;
 
-		// var doubleEdges = getDoubleEdges(canvas, context, transform, fills);
 		for (var f = 1; f < fills.length; f += 1) {
 			this._fillShapes(context, canvas, fills[f], transform, isMask);
 		}
-		// fixDoubleEdge(canvas, context, transform, doubleEdges);
 
 		for (var l = 1; l < lines.length; l += 1) {
 			this._outlineShapes(context, lines[l], transform, isMask);
@@ -49,7 +47,8 @@ CanvasRenderer.prototype._createPath = function (context, shapes, transform, pix
 	var p, seg;
 	var point1, point2;
 	for (var s = 0; s < shapes.length; s += 1) {
-		var path = shapes[s].records;
+		var shape = shapes[s];
+		var path = shape.records;
 		if (pixelHinting) {
 			// Pixel hinting, all the coordinates have to be rounded
 			point1 = transformPoint(transform, path[0].x1, path[0].y1);
@@ -77,6 +76,10 @@ CanvasRenderer.prototype._createPath = function (context, shapes, transform, pix
 					context.lineTo(point2.x, point2.y);
 				}
 			}
+		}
+
+		if (shape.noClose !== undefined && shape.noClose !== 0) {
+			context.closePath();
 		}
 	}
 };
@@ -125,7 +128,9 @@ CanvasRenderer.prototype._outlineShapes = function (context, shapes, transform, 
 		var matrix = fill.matrix;
 		var stops  = fill.stops;
 
-		transform = multiplyTransforms(transform, [matrix.scaleX, matrix.skewX, matrix.skewY, matrix.scaleY, matrix.moveX, matrix.moveY]);
+		var scaleX = matrix.scaleX === 0 ? 1 : matrix.scaleX;
+		var scaleY = matrix.scaleY === 0 ? 1 : matrix.scaleY;
+		transform = multiplyTransforms(transform, [scaleX, matrix.skewX, matrix.skewY, scaleY, matrix.moveX, matrix.moveY]);
 
 		scale = 1;
 		if (!line.noHScale) {
@@ -206,13 +211,16 @@ CanvasRenderer.prototype._fillShapes = function (context, canvas, shapes, transf
 		this._createPath(context, shapes, transform, false);
 
 		matrix = fill.matrix;
+		var scaleX = matrix.scaleX === 0 ? 1 : matrix.scaleX;
+		var scaleY = matrix.scaleY === 0 ? 1 : matrix.scaleY;
 		context.transform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
-		context.transform(matrix.scaleX, matrix.skewX, matrix.skewY, matrix.scaleY, matrix.moveX, matrix.moveY);
+		context.transform(scaleX, matrix.skewX, matrix.skewY, scaleY, matrix.moveX, matrix.moveY);
 
 		var gradient;
 		switch (fill.type) {
 		case 'focal-radial':
-			// focal radial not supported yet -> to verify but seems not feasible in canvas
+			// TODO: implement custom focal radial
+			// focal radial not supported by canvas API
 			// replaced by regular radial
 		case 'radial':
 			gradient = context.createRadialGradient(0, 0, 0, 0, 0, GRADIENT_LENGTH);

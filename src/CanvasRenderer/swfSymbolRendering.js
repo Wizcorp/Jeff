@@ -78,6 +78,7 @@ function applyTint(context, tint, dim, bounds) {
 CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, parentTransform, parentColor, instance, frame, isMask) {
 	/* jshint maxcomplexity: 60 */
 	/* jshint maxstatements: 150 */
+	var id = instance.id;
 
 	// Rendering the first frame, thus getting data of index 0
 	var transform      = instance.transforms[frame];
@@ -87,8 +88,6 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 
 	var matrix = multiplyTransforms(parentTransform, transform);
 	var color  = multiplyColors(parentColor, tint);
-
-	var id = instance.id;
 
 	var sprite = this._extractor._sprites[id];
 	var symbol = this._extractor._symbols[id];
@@ -118,16 +117,27 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 	var elementBounds = symbol ? symbol.bounds : sprite.bounds;
 	var bbox = elementBounds instanceof Array ? elementBounds[frame] : elementBounds;
 
+	var alphaMul, alphaAdd;
+	if (hasPixelManipulation) {
+		// Pixel manipulation should be done pre-alpha blending
+		alphaMul = color[3];
+		alphaAdd = color[7];
+		color[3] = 1;
+		color[7] = 0;
+	}
+
+	var alpha = Math.max(0, Math.min(color[3] + color[7], 1));
 	if (sprite) {
 		if (sprite.isShape) {
-			localContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
+			localContext.globalAlpha = alpha;
+			localContext.setTransform(1, 0, 0, 1, 0, 0);
 
 			// Transformation is applied within the drawshape function
 			this._drawShapes(sprite.shapes, localCanvas, localContext, matrix, isMask);
 		}
 
 		if (sprite.isImage) {
-			localContext.globalAlpha = Math.max(0, Math.min(color[3] + color[7], 1));
+			localContext.globalAlpha = alpha;
 			localContext.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
 
 			var image = this._images[id];
@@ -206,11 +216,12 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 	}
 
 	if (hasPixelManipulation) {
-
 		if (!bbox) {
 			// console.warn(element.id, 'has no bounds!');
 			return;
 		}
+
+		alpha = Math.max(0, Math.min(alphaMul + alphaAdd, 1));
 
 		var l = bbox.left;
 		var r = bbox.right;
@@ -255,7 +266,6 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 			height: localCanvas.height
 		};
 
-		// if (false) {
 		if (hasFilter) {
 			// Applying filters in reverse order
 			for (var f = 0; f < appliedFilters.length; f += 1) {
@@ -282,7 +292,6 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 			}
 		}
 
-		// if (false) {
 		if (hasTint) {
 			applyTint(localContext, tint, dim, bounds);
 		}
@@ -292,59 +301,59 @@ CanvasRenderer.prototype._renderSymbol = function (globalCanvas, globalContext, 
 			switch (blendMode) {
 			case 2: // 2 = layer
 				// Simple draw of local canvas into parent canvas
-				globalContext.globalAlpha = 1;
+				globalContext.globalAlpha = alpha;
 				globalContext.setTransform(1, 0, 0, 1, 0, 0);
 				globalContext.drawImage(localCanvas, 0, 0);
 				break;
 			case 3: // 3 = multiply
-				blendModes.multiply(localContext, globalContext, dim, bounds);
+				blendModes.multiply(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 4: // 4 = screen
-				blendModes.screen(localContext, globalContext, dim, bounds);
+				blendModes.screen(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 5: // 5 = lighten
-				blendModes.lighten(localContext, globalContext, dim, bounds);
+				blendModes.lighten(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 6:  // 6 = darken
-				blendModes.darken(localContext, globalContext, dim, bounds);
+				blendModes.darken(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 7: // 7 = difference
-				blendModes.difference(localContext, globalContext, dim, bounds);
+				blendModes.difference(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 8: // 8 = add
-				blendModes.add(localContext, globalContext, dim, bounds);
+				blendModes.add(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 9: // 9 = subtract
-				blendModes.substract(localContext, globalContext, dim, bounds);
+				blendModes.substract(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 10: // 10 = invert
-				blendModes.invert(localContext, globalContext, dim, bounds);
+				blendModes.invert(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 11: // 11 = alpha
-				blendModes.alpha(localContext, globalContext, dim, bounds);
+				blendModes.alpha(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 12: // 12 = erase
-				blendModes.erase(localContext, globalContext, dim, bounds);
+				blendModes.erase(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 13: // 13 = overlay
-				blendModes.overlay(localContext, globalContext, dim, bounds);
+				blendModes.overlay(localContext, globalContext, alpha, dim, bounds);
 				break;
 			case 14: // 14 = hardlight
-				blendModes.hardlight(localContext, globalContext, dim, bounds);
+				blendModes.hardlight(localContext, globalContext, alpha, dim, bounds);
 				break;
 			default:
 				// Should not happen
 				console.log('[CanvasRenderer.renderSymbol] Applying invalid blend mode', blendMode);
 
 				// Draw local canvas into parent canvas
-				globalContext.globalAlpha = 1;
+				globalContext.globalAlpha = alpha;
 				globalContext.setTransform(1, 0, 0, 1, 0, 0);
 				globalContext.drawImage(localCanvas, 0, 0);
 				break;
 			}
 		} else {
 			// Draw local canvas into parent canvas
-			globalContext.globalAlpha = 1;
+			globalContext.globalAlpha = alpha;
 			globalContext.setTransform(1, 0, 0, 1, 0, 0);
 			globalContext.drawImage(localCanvas, 0, 0);
 		}

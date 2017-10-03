@@ -14,6 +14,7 @@ function Bounds (left, right, top, bottom) {
 function Item () {
 	this.id = -1;
 
+	this.duration  = 1;
 	this.swfObject = null;
 	this.parents   = {};
 	this.className = null;
@@ -37,7 +38,8 @@ Sprite.prototype.frameCount = 1;
 
 function Symbol (frameCount, frameRate, frameSize) {
 	Item.call(this);
-	this.frameCount = frameCount;
+	this.frameCount = frameCount; // frameCount can be optimized to 1 in some cases
+	this.duration = frameCount; // duration cannot be changed
 	this.frameRate = frameRate;
 	this.frameSize = frameSize;
 	this.scalingGrid = null;
@@ -47,9 +49,11 @@ function Symbol (frameCount, frameRate, frameSize) {
 
 Symbol.prototype.isSymbol = true;
 
-function UnhandledItem () {
+function UnhandledItem (id, type) {
 	Item.call(this);
 
+	this.id = id;
+	this.type = type;
 	this.unhandled = true;
 }
 

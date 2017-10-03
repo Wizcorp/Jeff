@@ -14,14 +14,14 @@ function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 				h: properties.h
 			};
 
-			if (properties.margin) {
-				spriteData.margin = properties.margin;
-			}
-
 			spritesData[spriteId] = spriteData;
 
 			if (sprite.className) {
 				spriteData.className = sprite.className;
+			}
+
+			if (sprite.duration !== 1) {
+				spriteData.duration = sprite.duration;
 			}
 		}
 	}
@@ -50,6 +50,10 @@ function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 
 		if (symbol.frameSize) {
 			symbolData.frameSize = symbol.frameSize;
+		}
+
+		if (symbol.duration !== symbol.frameCount) {
+			symbolData.duration = symbol.duration;
 		}
 
 		symbolsData[symbolId] = symbolData;

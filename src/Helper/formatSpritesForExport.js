@@ -1,6 +1,9 @@
 var getCanvas       = require('../CanvasRenderer/GetCanvas');
 var BoxPartitioning = require('./BoxPartitioning');
 
+// margin between assets in atlasmaps
+var MARGIN = 1;
+
 function nextHighestPowerOfTwo(x) {
 	x -= 1;
 	for (var i = 1; i < 32; i <<= 1) {
@@ -17,7 +20,7 @@ function computeAtlasLayout(spriteDims, powerOf2Images, maxAtlasDim, exportRatio
 	var totalArea = 0;
 	for (id in spriteDims) {
 		spriteDim = spriteDims[id];
-		totalArea += (spriteDim.sw + 2 * spriteDim.margin) * (spriteDim.sh + 2 * spriteDim.margin);
+		totalArea += (spriteDim.sw + 2 * MARGIN) * (spriteDim.sh + 2 * MARGIN);
 	}
 	var sqrSide = Math.sqrt(totalArea * exportRatio);
 
@@ -58,8 +61,8 @@ function computeAtlasLayout(spriteDims, powerOf2Images, maxAtlasDim, exportRatio
 			for (var s = 0; s < sprites.length; s += 1) {
 				var sprite = sprites[s];
 				// Adding margin on 4 sides of the sprite
-				var width = exportRatio * (sprite.sw + 2 * spriteDim.margin);
-				var height = exportRatio * (sprite.sh + 2 * spriteDim.margin);
+				var width = exportRatio * (sprite.sw + 2 * MARGIN);
+				var height = exportRatio * (sprite.sh + 2 * MARGIN);
 				boxPartioning.add(sprite, width, height);
 			}
 
@@ -88,8 +91,8 @@ function computeAtlasLayout(spriteDims, powerOf2Images, maxAtlasDim, exportRatio
 		spriteDim = spriteBox.e;
 
 		// Computing position of sprite on the atlas with respect to its margin
-		spriteDim.sx = spriteBox.l + spriteDim.margin;
-		spriteDim.sy = spriteBox.t + spriteDim.margin;
+		spriteDim.sx = spriteBox.l + MARGIN;
+		spriteDim.sy = spriteBox.t + MARGIN;
 	}
 
 	return { width: bestPartitioning.occupiedBounds.w, height: bestPartitioning.occupiedBounds.h };
@@ -176,6 +179,16 @@ function ImageData(name, image, sprites) {
 	this.sprites = sprites;
 }
 
+function findImageData(image, newSpriteImages) {
+	for (var i = 0; i < newSpriteImages.length; i += 1) {
+		var imageData = newSpriteImages[i];
+		if (imageData.image === image) {
+			return imageData;
+		}
+	}
+	return null
+}
+
 module.exports = function formatSpritesForExport(spriteImages, spriteProperties, createAtlas, powerOf2Images, maxImageDim, classGroupName) {
 	var newSpriteImages = [];
 	if (createAtlas) {
@@ -206,7 +219,13 @@ module.exports = function formatSpritesForExport(spriteImages, spriteProperties,
 			augmentToNextPowerOf2(spriteImages);
 		}
 		for (var spriteId in spriteImages) {
-			newSpriteImages.push(new ImageData(spriteId, spriteImages[spriteId], [spriteId]));
+			var image = spriteImages[spriteId];
+			var imageData = findImageData(image, newSpriteImages);
+			if (imageData) {
+				imageData.sprites.push(spriteId);
+			} else {
+				newSpriteImages.push(new ImageData(spriteId, spriteImages[spriteId], [spriteId]));
+			}
 		}
 	}
 

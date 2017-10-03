@@ -56,6 +56,38 @@ var transformBound = function (transform, bounds) {
 	return new Bounds(left, right, top, bottom);
 };
 
+function computeInstanceBounds(child, symbols, sprites, frame) {
+	// Verifying that the child exists for given frame
+	if (frame < child.frames[0] || child.frames[1] < frame) {
+		return null;
+	}
+
+	var bbox = computeBoundsAtFrame(child.id, symbols, sprites, frame - child.frames[0]);
+	if (bbox === null) {
+		return null;
+	}
+
+	var transform = child.transforms[frame - child.frames[0]];
+	var bounds = transformBound(transform, bbox);
+
+	var filters = child.filters && child.filters[frame];
+	if (filters) {
+		var maxBlurX = 0;
+		var maxBlurY = 0;
+		for (var f = 0; f < filters.length; f += 1) {
+			var filter = filters[f];
+			maxBlurX = Math.max(filter.blurX, maxBlurX);
+			maxBlurY = Math.max(filter.blurY, maxBlurY);
+		}
+		bounds.left   -= maxBlurX / 2;
+		bounds.top    -= maxBlurY / 2;
+		bounds.right  += maxBlurX / 2;
+		bounds.bottom += maxBlurY / 2;
+	}
+
+	return bounds;
+}
+
 function computeBoundsAtFrame(itemId, symbols, sprites, frame) {
 	/* jshint maxstatements: 100 */
 	var sprite = sprites[itemId];
@@ -85,25 +117,21 @@ function computeBoundsAtFrame(itemId, symbols, sprites, frame) {
 	for (var c = children.length - 1; c >= 0; c -= 1) {
 		var child = children[c];
 
+		if (child.maskEnd) {
+			continue;
+		}
+
 		// Verifying that the child exists for given frame
-		if (frame < child.frames[0] || child.frames[1] < frame || child.maskEnd) {
+		var bounds = computeInstanceBounds(child, symbols, sprites, frame);
+		if (!bounds) {
 			continue;
 		}
-
-		var bbox = computeBoundsAtFrame(child.id, symbols, sprites, frame - child.frames[0]);
-		if (bbox === null) {
-			continue;
-		}
-
-		var transform = child.transforms[frame - child.frames[0]];
-		var bounds = transformBound(transform, bbox);
 
 		// child bounds
 		var cLeft   = bounds.left;
 		var cTop    = bounds.top;
 		var cRight  = bounds.right;
 		var cBottom = bounds.bottom;
-
 
 		if (child.maskStart) {
 			// Computing bounding box of masked elements
@@ -117,18 +145,10 @@ function computeBoundsAtFrame(itemId, symbols, sprites, frame) {
 			while (!children[--c].maskEnd) {
 				var clippedChild = children[c];
 
-				// Verifying that the child exists for given frame
-				if (frame < clippedChild.frames[0] || clippedChild.frames[1] < frame) {
+				var clippedBounds = computeInstanceBounds(clippedChild, symbols, sprites, frame);
+				if (!clippedBounds) {
 					continue;
 				}
-
-				var clippedBbox = computeBoundsAtFrame(clippedChild.id, symbols, sprites, frame - clippedChild.frames[0]);
-				if (clippedBbox === null) {
-					continue;
-				}
-
-				var clippedTransform = clippedChild.transforms[frame - clippedChild.frames[0]];
-				var clippedBounds    = transformBound(clippedTransform, clippedBbox);
 
 				var ccLeft   = clippedBounds.left;
 				var ccTop    = clippedBounds.top;

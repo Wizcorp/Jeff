@@ -64,7 +64,7 @@ function JeffOptions(params) {
 	this.powerOf2Images      = params.powerOf2Images      || false;
 	this.maxImageDim         = params.maxImageDim         || 2048;
 	this.beautify            = params.beautify            || false;
-	this.flatten             = params.flatten             || false;
+	this.collapse             = params.collapse             || false;
 	this.prerenderBlendings  = params.prerenderBlendings  || false;
 
 	// Advanced options
@@ -113,9 +113,9 @@ function JeffOptions(params) {
 
 	// Checking for uncompatible options
 	if (this.renderFrames) {
-		if (this.flatten) {
-			this.flatten = false;
-			// console.warn('[Jeff] Option to flatten will be ignored');
+		if (this.collapse) {
+			this.collapse = false;
+			// console.warn('[Jeff] Option to collapse will be ignored');
 		}
 	}
 }
@@ -205,11 +205,6 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 		self._parser.parse(swfName, swfData,
 			function (swfObject) {
 				var id = swfObject.id;
-				// console.log('object', JSON.stringify(swfObject));
-				// console.log('properties!!', swfObject.id);
-				// for (var p in swfObject) {
-				// 	console.log(p);
-				// }
 				if (id === undefined) {
 
 					if (swfObject.type === 'scalingGrid') {
@@ -243,7 +238,9 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 						return;
 					}
 
-					console.log('Jeff.parseFile: swfObject not handled, ', swfObject);
+					if (this._options.verbosity >= 3) {
+						console.warn('[Jeff.parseFile] swfObject not handled. Id = ' + swfObject.id);
+					}
 					return;
 				}
 
@@ -322,16 +319,7 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 	if (this._options.renderFrames) {
 		exportItemsData = helper.generateFrameByFrameData(this._symbols, spriteProperties, this._options.onlyOneFrame);
 	} else {
-
-		// TODO: loop over optimization as long as they can be performed?
-		if (this._options.flatten) {
-			this._symbols = helper.flattenAnimations(this._symbols, this._sprites);
-		}
-
-		// helper.simplifyAnimation(this._symbols, this._sprites, this._items.length);
-
-		// this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
-
+		this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
 		exportItemsData = helper.generateMetaData(this._sprites, this._symbols, spriteProperties, this._frameRate);
 	}
 
@@ -362,6 +350,10 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 
 	var imageArray = [];
 	if (!this._options.ignoreImages) {
+		if (this._options.createAtlas) {
+			exportData.meta.imageMargin = 1;
+		}
+
 		var spritesImages = helper.formatSpritesForExport(
 			spriteImages,
 			spriteProperties,
@@ -402,7 +394,6 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 	}
 
 	if (!this._options.ignoreData) {
-		// console.error('data!', exportData)
 		this._writeDataToDisk(exportData);
 	}
 

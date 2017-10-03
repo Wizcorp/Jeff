@@ -5,6 +5,7 @@ var elements = require('../elements/');
 var Bounds = elements.Bounds;
 var Sprite = elements.Sprite;
 var Symbol = elements.Symbol;
+var Text   = elements.Text;
 var UnhandledItem = elements.UnhandledItem;
 
 function createItem(id, swfObject) {
@@ -70,12 +71,12 @@ function createItem(id, swfObject) {
 			}
 
 			// Converting bounds from twips to pixels
-			var bounds = swfObject.bounds;
+			var shapeBounds = swfObject.bounds;
 			item.bounds = new Bounds(
-				bounds.left   / 20,
-				bounds.right  / 20,
-				bounds.top    / 20,
-				bounds.bottom / 20
+				shapeBounds.left   / 20,
+				shapeBounds.right  / 20,
+				shapeBounds.top    / 20,
+				shapeBounds.bottom / 20
 			);
 			break;
 
@@ -95,12 +96,10 @@ function createItem(id, swfObject) {
 			break;
 
 		// Not handled yet
-		case 'font':
 		case 'text':
-			item = new UnhandledItem();
-			break;
+		case 'font':
 		default:
-			item = new UnhandledItem();
+			item = new UnhandledItem(id, swfObject.type);
 			break;
 	}
 
@@ -110,14 +109,16 @@ function createItem(id, swfObject) {
 	return item;
 }
 
-function createItems(swfObjects) {
+function createItems(swfObjects, showUnhandled) {
 	var sprites = {};
 	var symbols = {};
+	var texts   = {};
 	var itemsById = [];
 
 	var items = {
 		sprites: sprites,
 		symbols: symbols,
+		texts: texts,
 		itemsById: itemsById
 	};
 
@@ -125,14 +126,16 @@ function createItems(swfObjects) {
 		var swfObject = swfObjects[s];
 		var id = parseInt(swfObject.id, 10);
 		var item = createItem(id, swfObject);
-		if (!item) {
-			continue;
+		if (showUnhandled && item.isUnhandled) {
+			console.warn('[Jeff.createItem] Unsupported swfObject. Id = ' + item.id + '. Type = ' + item.type)
 		}
 
 		if (item.isSymbol) {
 			symbols[id] = item;
 		} else if (item.isSprite) {
 			sprites[id] = item;
+		} else if (item.isText) {
+			texts[id] = item;
 		}
 		itemsById[id] = item;
 	}

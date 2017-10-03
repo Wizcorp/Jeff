@@ -961,7 +961,7 @@ SwfParser.prototype = {
 		offset = offset; //not used
 		len = len; //not used
 		var id = stream.readUI16();
-		var glyphs = [];
+		var glyphs    = [];
 		var codeTable = [];
 		var font = {
 			type: 'font',
@@ -1199,8 +1199,8 @@ SwfParser.prototype = {
 				break;
 			}
 
-			var type = hdr >> 7;
-			if (type) {
+			var isTextRecord = hdr >> 7;
+			if (isTextRecord) {
 				var flags = hdr & 0x0f;
 				if (flags) {
 					var f = Base.textStyleFlags;

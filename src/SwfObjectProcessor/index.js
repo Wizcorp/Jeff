@@ -10,7 +10,7 @@ var computeDimensions = require('./computeDimensions');
 function processSwfObjects(swfObjects, allClasses, extractor) {
 
 	// Creating items from swfObjects
-	var items = createItems(swfObjects);
+	var items = createItems(swfObjects, extractor._options.verbosity === 3);
 	var symbols = items.symbols;
 	var sprites = items.sprites;
 	var itemsById = items.itemsById;
