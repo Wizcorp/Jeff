@@ -649,7 +649,7 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 
 			// Referencing image associated with sprite
 			this._images[symbolId] = canvas;
-// console.error('rendered', symbolId, x, y, w, h)
+
 			// Adding sprite to list of sprites
 			sprites[symbolId] = sprite;
 			imageMap[symbolId] = canvas;
@@ -677,7 +677,6 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 					newSprite.duration = symbol.duration;
 					newSprite.className = symbol.className;
 
-// console.error('collapsed', symbolId)
 					newSpriteProperties.x += firstChild.transforms[0][4];
 					newSpriteProperties.y += firstChild.transforms[0][5];
 
@@ -713,7 +712,6 @@ CanvasRenderer.prototype.prerenderSymbols = function (symbols, sprites, imageMap
 	// list of prerendered filtered elements per 
 	var prerenderedFilteredElements = {};
 
-var hasRenderedOne = false;
 	for (var symbolId in symbols) {
 		var symbol = symbols[symbolId];
 		var frameCount = symbol.frameCount;
@@ -723,8 +721,7 @@ var hasRenderedOne = false;
 			var childId = child.id;
 
 			var sprite = sprites[childId];
-			if (sprite && frameCount === 1 && child.filters && !hasRenderedOne) {
-				// hasRenderedOne = true;
+			if (sprite && frameCount === 1 && child.filters) {
 
 				var instance = new SymbolInstance(childId, [sprite.bounds], child.filters, child.blendModes);
 				var frameCanvas = instance.constructFrame(frame, ratio);

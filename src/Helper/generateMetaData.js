@@ -1,5 +1,5 @@
 
-function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
+function generateMetaData(sprites, symbols, spriteProperties, frameRates, frameRate) {
 	var s;
 
 	var spritesData = {};
@@ -37,15 +37,19 @@ function generateMetaData(sprites, symbols, spriteProperties, frameRate) {
 
 		if (symbol.className) {
 			symbolData.className = symbol.className;
-			if (symbol.containerBounds) symbolData.containerBounds = symbol.containerBounds;
+
+			if (symbol.containerBounds) {
+				symbolData.containerBounds = symbol.containerBounds;
+			}
+
+			var symbolFrameRate = frameRates[symbol.className];
+			if (symbolFrameRate !== frameRate) {
+				symbolData.frameRate = symbolFrameRate;
+			}
 		}
 
 		if (symbol.scalingGrid) {
 			symbolData.scalingGrid = symbol.scalingGrid;
-		}
-
-		if (symbol.frameRate !== frameRate) {
-			symbolData.frameRate = symbol.frameRate;
 		}
 
 		if (symbol.frameSize) {

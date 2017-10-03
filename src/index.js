@@ -32,6 +32,9 @@ function Jeff(options) {
 	this._frameRate = DEFAULT_FRAME_RATE;
 	this._frameSize = null;
 
+	// Information about source files
+	this._fileHeaderInfo         = undefined;
+
 	// Parameters applying to the file group being processed
 	this._fileGroupName          = undefined; // Name
 	this._fileGroupRatio         = undefined; // Export ratio
@@ -41,6 +44,8 @@ function Jeff(options) {
 	this._symbols                = undefined; // Symbols corresponding to the swfObjects
 	this._sprites                = undefined;
 	this._items                  = undefined;
+
+	this._frameRates = {};
 
 	// Parameters applying to the class group being processed
 	this._classGroupName         = undefined; // Name
@@ -64,7 +69,7 @@ function JeffOptions(params) {
 	this.powerOf2Images      = params.powerOf2Images      || false;
 	this.maxImageDim         = params.maxImageDim         || 2048;
 	this.beautify            = params.beautify            || false;
-	this.collapse             = params.collapse             || false;
+	this.collapse             = params.collapse           || false;
 	this.prerenderBlendings  = params.prerenderBlendings  || false;
 
 	// Advanced options
@@ -94,6 +99,7 @@ function JeffOptions(params) {
 	this.customWriteFile     = params.customWriteFile;
 	this.customReadFile      = params.customReadFile;
 	this.fixedSize           = params.fixedSize;
+	this.fallbackFrameRate   = params.fallbackFrameRate   || 25;
 	// 1: minimal log level, 10: maximum log level. TODO: needs to be implemented on every console.warn/log/error
 	this.verbosity           = params.verbosity           || 3;
 
@@ -122,6 +128,7 @@ function JeffOptions(params) {
 
 Jeff.prototype._extract = function (cb) {
 	this._extractedData = [];
+	this._fileHeaderInfo = {};
 
 	// Making sure the input directory exists
 	if (!fs.existsSync(this._options.inputDir)) {
@@ -200,11 +207,17 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 	}
 	var self = this;
 	var swfObjects = [];
+	var classes = [];
 	function onFileRead(error, swfData) {
 		if (error) return nextSwfCb(error);
 		self._parser.parse(swfName, swfData,
 			function (swfObject) {
 				var id = swfObject.id;
+
+				if (swfObject.symbolClasses) {
+					Array.prototype.push.apply(classes, Object.keys(swfObject.symbolClasses));
+				}
+
 				if (id === undefined) {
 
 					if (swfObject.type === 'scalingGrid') {
@@ -247,9 +260,9 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 				swfObjects[id] = swfObject;
 			},
 			function (error) {
-				// propagatating original current file's frame rate to its objects
-				for (var id in swfObjects) {
-					swfObjects[id].frameRate = self._frameRate;
+				// keeping track of frame rate
+				for (var c = 0; c < classes.length; c += 1) {
+					self._frameRates[classes[c]] = self._frameRate;
 				}
 
 				swfObjects[0].frameSize = self._frameSize;
@@ -320,7 +333,7 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 		exportItemsData = helper.generateFrameByFrameData(this._symbols, spriteProperties, this._options.onlyOneFrame);
 	} else {
 		this._renderer.prerenderSymbols(this._symbols, this._sprites, spriteImages, spriteProperties);
-		exportItemsData = helper.generateMetaData(this._sprites, this._symbols, spriteProperties, this._frameRate);
+		exportItemsData = helper.generateMetaData(this._sprites, this._symbols, spriteProperties, this._frameRates, this._frameRate);
 	}
 
 	// Applying post-process, if any
@@ -349,9 +362,14 @@ Jeff.prototype._extractClassGroup = function (spriteImages, spriteProperties) {
 	};
 
 	var imageArray = [];
-	if (!this._options.ignoreImages) {
+	if (this._options.ignoreImages !== true) { // could be a regular expression
 		if (this._options.createAtlas) {
 			exportData.meta.imageMargin = 1;
+		}
+
+		// Removing ignored images
+		if (this._options.ignoreImages) {
+			helper.removeIgnoredImages(this._symbols, this._sprites, spriteImages, this._options.ignoreImages);
 		}
 
 		var spritesImages = helper.formatSpritesForExport(

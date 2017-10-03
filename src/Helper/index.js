@@ -9,3 +9,4 @@ module.exports.filterClasses            = require('./filterClasses.js');
 module.exports.groupFiles               = require('./groupFiles.js');
 module.exports.delocateMatrices         = require('./delocateMatrices.js');
 module.exports.formatSpritesForExport   = require('./formatSpritesForExport.js');
+module.exports.removeIgnoredImages      = require('./removeIgnoredImages.js');

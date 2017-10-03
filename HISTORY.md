@@ -1,6 +1,6 @@
 # Release history
 
-## v0.3.0
+## v0.4.0
 Slight modification of export format for smaller output file size.
 Improved hierarchy flattening algorithm for improved performance.
 Refactored the code to make the distinction between symbols and sprites early on in the conversion flow.
@@ -8,6 +8,10 @@ Improved naming unifications with official swf format specs.
 Frame rate now present in exported under meta tag.
 Added jshint.
 Filters now delocated for improved file size (similarly to matrices).
+
+## v0.2.10
+Framerate value in exported meta data is now matching original files framerate
+Jeff version in exported meta data is now dynamic
 
 ## v0.2.9
 Fixed rendering when masked layers have blend modes
