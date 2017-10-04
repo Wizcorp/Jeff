@@ -1,4 +1,3 @@
-'use strict';
 
 function groupClasses(classList, classGroups, split) {
 	if (!split && Object.keys(classGroups).length === 0) {

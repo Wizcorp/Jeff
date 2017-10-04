@@ -1,72 +1,61 @@
-'use strict';
 
-function generateFrameByFrameData(symbols, symbolList, graphicProperties, onlyOneFrame) {
-	var exportData = {};
-	for (var s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
-		var toExport = false;
+function populatePositions(symbol, positionData, imageId) {
+	symbol.x = positionData.x;
+	symbol.y = positionData.y;
+	symbol.w = positionData.w;
+	symbol.h = positionData.h;
 
-		var symbolData = {};
-		symbolData.id = symbolId;
+	symbol.image = imageId;
+}
 
-		if (symbol.isAnimation) {
-			if (!symbol.className) {
-				continue;
-			}
+function generateFrameByFrameData(symbols, spritesProperties, onlyOneFrame) {
+	var spritesData = {};
+	var symbolsData = {};
+	for (var id in symbols) {
+		var symbol = symbols[id];
 
-			symbolData.className = symbol.className;
-			if (symbol.containerBounds) symbolData.containerBounds = symbol.containerBounds;
-
-			if (onlyOneFrame) {
-				var properties = graphicProperties[symbol.className];
-				if (properties) {
-					symbolData.isGraphic = true;
-					symbolData.x = properties.x;
-					symbolData.y = properties.y;
-					symbolData.w = properties.w;
-					symbolData.h = properties.h;
-
-					symbolData.sx = properties.sx;
-					symbolData.sy = properties.sy;
-					symbolData.sw = properties.sw;
-					symbolData.sh = properties.sh;
-
-					toExport = true;
-				}
-			} else {
-				symbolData.isAnimation   = true;
-				symbolData.duration = symbol.duration;
-
-				var frames     = [];
-				var frameNames = symbol.frameNames;
-				for (var f = 0; f < frameNames.length; f += 1) {
-					var frameName  = frameNames[f];
-					var properties = graphicProperties[frameName];
-					if (properties) {
-						var position = {
-							x: properties.x,
-							y: properties.y,
-							w: properties.w,
-							h: properties.h,
-
-							sx: properties.sx,
-							sy: properties.sy,
-							sw: properties.sw,
-							sh: properties.sh
-						};
-						frames[f] = { name: frameName, position: position };
-					}
-				}
-
-				symbolData.frames = frames;
-				toExport = true;
-			}
+		var className = symbol.className;
+		if (!className) {
+			continue;
 		}
 
-		if (toExport) exportData[symbolId] = symbolData;
+		var item = {
+			className: className
+		};
+
+		if (symbol.containerBounds) {
+			item.containerBounds = symbol.containerBounds;
+		}
+
+		if (onlyOneFrame) {
+			populatePositions(item, spritesProperties[className], id);
+			spritesData[id] = item;
+		} else {
+			item.frameCount = symbol.frameCount;
+
+			var frames  = [];
+			var frameNames = symbol.frameNames;
+			for (var f = 0; f < frameNames.length; f += 1) {
+				var frameName  = frameNames[f];
+				var properties = spritesProperties[frameName];
+				if (properties) {
+					var frameId = properties.frameId;
+					frames.push(frameId);
+
+					var childItem = {};
+					populatePositions(childItem, properties, frameName);
+					spritesData[frameId] = childItem;
+				}
+			}
+
+			item.frames = frames;
+			symbolsData[id] = item;
+		}
 	}
 
-	return exportData;
+	return {
+		sprites: spritesData,
+		symbols: symbolsData
+	};
 }
 module.exports = generateFrameByFrameData;

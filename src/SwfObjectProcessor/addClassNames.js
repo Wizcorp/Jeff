@@ -1,4 +1,3 @@
-'use strict';
 
 function addClassNames(symbols, allClasses) {
 	var classSymbols = [];
@@ -10,6 +9,8 @@ function addClassNames(symbols, allClasses) {
 			if (classSymbol) {
 				classSymbol.className = className;
 				classSymbols.push(classSymbol);
+			} else {
+				console.error('[JEFF.addClassName] Symbol missing. Class name: ' + className);
 			}
 		}
 	}

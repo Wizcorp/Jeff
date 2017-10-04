@@ -1,53 +1,71 @@
-'use strict';
 
-function generateMetaData(symbols, symbolList, graphicProperties) {
-	var exportData = {};
-	for (var s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
-		var toExport = false;
+function generateMetaData(sprites, symbols, spriteProperties, frameRates, frameRate) {
+	var s;
 
-		var symbolData = {};
-		symbolData.id = symbolId;
+	var spritesData = {};
+	for (var spriteId in sprites) {
+		var sprite = sprites[spriteId];
+		var properties = spriteProperties[spriteId];
+		if (properties) {
+			var spriteData = {
+				x: -properties.x,
+				y: -properties.y,
+				w: properties.w,
+				h: properties.h
+			};
 
-		if (symbol.isAnimation) {
-			symbolData.isAnimation = true;
-			symbolData.children = JSON.parse(JSON.stringify(symbol.children));
-			symbolData.duration = symbol.duration;
+			spritesData[spriteId] = spriteData;
 
-			if (symbol.className) {
-				symbolData.className = symbol.className;
-				if (symbol.containerBounds) symbolData.containerBounds = symbol.containerBounds;
+			if (sprite.className) {
+				spriteData.className = sprite.className;
 			}
 
-			if (symbol.scalingGrid) {
-				symbolData.scalingGrid = symbol.scalingGrid;
-			}
-
-			toExport = true;
-		}
-
-		if (symbol.isGraphic) {
-			symbolData.isGraphic = true;
-			var properties = graphicProperties[symbolId];
-			if (properties) {
-				symbolData.x = -properties.x;
-				symbolData.y = -properties.y;
-				symbolData.w = properties.w;
-				symbolData.h = properties.h;
-
-				symbolData.sx = properties.sx;
-				symbolData.sy = properties.sy;
-				symbolData.sw = properties.sw;
-				symbolData.sh = properties.sh;
-
-				toExport = true;
+			if (sprite.duration !== 1) {
+				spriteData.duration = sprite.duration;
 			}
 		}
-
-		if (toExport) exportData[symbolId] = symbolData;
 	}
 
-	return exportData;
+
+	var symbolsData = {};
+	for (var symbolId in symbols) {
+		var symbol = symbols[symbolId];
+		var symbolData = {
+			children: JSON.parse(JSON.stringify(symbol.children)),
+			frameCount: symbol.frameCount
+		};
+
+		if (symbol.className) {
+			symbolData.className = symbol.className;
+
+			if (symbol.containerBounds) {
+				symbolData.containerBounds = symbol.containerBounds;
+			}
+
+			var symbolFrameRate = frameRates[symbol.className];
+			if (symbolFrameRate !== frameRate) {
+				symbolData.frameRate = symbolFrameRate;
+			}
+		}
+
+		if (symbol.scalingGrid) {
+			symbolData.scalingGrid = symbol.scalingGrid;
+		}
+
+		if (symbol.frameSize) {
+			symbolData.frameSize = symbol.frameSize;
+		}
+
+		if (symbol.duration !== symbol.frameCount) {
+			symbolData.duration = symbol.duration;
+		}
+
+		symbolsData[symbolId] = symbolData;
+	}
+
+	return {
+		sprites: spritesData,
+		symbols: symbolsData
+	};
 }
 module.exports = generateMetaData;

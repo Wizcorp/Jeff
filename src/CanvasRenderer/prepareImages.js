@@ -1,22 +1,20 @@
-'use strict';
 var CanvasRenderer = require('./main');
 
 CanvasRenderer.prototype._prepareImages = function () {
 	// Creating the list of images
+	var i;
 	var imagesToPrepare = [];
-	var symbolList = this._extractor._symbolList;
-	var symbols    = this._extractor._symbols;
-	for (var s = 0; s < symbolList.length; s += 1) {
-		var symbolId = symbolList[s];
-		var symbol   = symbols[symbolId];
+	var sprites = this._extractor._sprites;
+	for (var spriteId in sprites) {
+		var sprite   = sprites[spriteId];
 
-		if (symbol.isImage) {
-			imagesToPrepare.push(symbol.swfObject);
+		if (sprite.isImage) {
+			imagesToPrepare.push(sprite.swfObject);
 		}
 
-		var images = symbol.images;
+		var images = sprite.images;
 		if (images) {
-			for (var i = 0; i < images.length; i += 1) {
+			for (i = 0; i < images.length; i += 1) {
 				var imageData = images[i];
 				imagesToPrepare.push(imageData.image);
 			}
@@ -44,7 +42,7 @@ CanvasRenderer.prototype._prepareImages = function () {
 		}
 	};
 
-	for (var i = 0; i < imagesToPrepare.length; i += 1) {
+	for (i = 0; i < imagesToPrepare.length; i += 1) {
 		this._renderImageToCanvas(imagesToPrepare[i], onWrittenCallBack);
 	}
 };

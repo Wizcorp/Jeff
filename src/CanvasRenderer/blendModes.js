@@ -1,6 +1,5 @@
-'use strict';
 
-function blend(blendEquation, source, destination, dim, bounds) {
+function blend(blendEquation, source, destination, alpha, dim, bounds) {
 	var left   = Math.max(dim.left,   bounds.left);
 	var top    = Math.max(dim.top,    bounds.top);
 	var right  = Math.min(dim.right,  bounds.right);
@@ -20,7 +19,7 @@ function blend(blendEquation, source, destination, dim, bounds) {
 
 	for (var i = 0; i < nBytes; i += 4) {
 		var da = dstData[i + 3] / 255;
-		var sa = srcData[i + 3] / 255;
+		var sa = srcData[i + 3] / 255 * alpha;
 
 		if (sa === 0 && da === 0) {
 			dstData[i]     = 0;
@@ -43,7 +42,7 @@ function blend(blendEquation, source, destination, dim, bounds) {
 
 		// To anyone who reads this comment
 		// if you know why this code works when raising to the power 4 (rather than 1?)
-		// let me know at bchevalier@wizcorp.jp
+		// let us know by posting on JEFF's github repo
 		var r = da + dz * Math.pow(da / (sa + da), 4);
 
 		dstData[i]     = (dr * sz + sa * blendEquation(sr, dr)) * r + (1 - r) * sr;
@@ -63,38 +62,38 @@ function blend(blendEquation, source, destination, dim, bounds) {
 
 // Flash Blend mode 3
 function multiply(colorSource, colordDest) { return colorSource * colordDest / 255; }
-exports.multiply = function (source, destination, dim, bounds) { blend(multiply, source, destination, dim, bounds); };
+exports.multiply = function (source, destination, alpha, dim, bounds) { blend(multiply, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 4
 function screen(colorSource, colordDest) { return 255 - (255 - colorSource) * (255 - colordDest) / 255; }
-exports.screen = function (source, destination, dim, bounds) { blend(screen, source, destination, dim, bounds); };
+exports.screen = function (source, destination, alpha, dim, bounds) { blend(screen, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 5
 function lighten(colorSource, colordDest) { return Math.max(colorSource, colordDest); }
-exports.lighten = function (source, destination, dim, bounds) { blend(lighten, source, destination, dim, bounds); };
+exports.lighten = function (source, destination, alpha, dim, bounds) { blend(lighten, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 6
 function darken(colorSource, colordDest) { return Math.min(colorSource, colordDest); }
-exports.darken = function (source, destination, dim, bounds) { blend(darken, source, destination, dim, bounds); };
+exports.darken = function (source, destination, alpha, dim, bounds) { blend(darken, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 7
 function difference(colorSource, colordDest) { return (colordDest < colorSource) ? colorSource - colordDest : colordDest - colorSource; }
-exports.difference = function (source, destination, dim, bounds) { blend(difference, source, destination, dim, bounds); };
+exports.difference = function (source, destination, alpha, dim, bounds) { blend(difference, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 8
 function add(colorSource, colordDest) { return colordDest + colorSource; }
-exports.add = function (source, destination, dim, bounds) { blend(add, source, destination, dim, bounds); };
+exports.add = function (source, destination, alpha, dim, bounds) { blend(add, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 9
 function substract(colorSource, colordDest) { return colordDest - colorSource; }
-exports.substract = function (source, destination, dim, bounds) { blend(substract, source, destination, dim, bounds); };
+exports.substract = function (source, destination, alpha, dim, bounds) { blend(substract, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 10
 function invert(colorSource, colordDest) { return 255 - colordDest; }
-exports.invert = function (source, destination, dim, bounds) { blend(invert, source, destination, dim, bounds); };
+exports.invert = function (source, destination, alpha, dim, bounds) { blend(invert, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 11
-exports.alpha = function (source, destination, dim, bounds) {
+exports.alpha = function (source, destination, alpha, dim, bounds) {
 	var left   = Math.max(dim.left,   bounds.left);
 	var top    = Math.max(dim.top,    bounds.top);
 	var right  = Math.min(dim.right,  bounds.right);
@@ -113,14 +112,14 @@ exports.alpha = function (source, destination, dim, bounds) {
 	var nBytes = dstData.length;
 
 	for (var i = 0; i < nBytes; i += 4) {
-		dstData[i + 3] *= srcData[i + 3] / 255;
+		dstData[i + 3] *= alpha * srcData[i + 3] / 255;
 	}
 
 	destination.putImageData(dstBuffer, left, top);
 };
 
 // Flash Blend mode 12
-exports.erase = function (source, destination, dim, bounds) {
+exports.erase = function (source, destination, alpha, dim, bounds) {
 	var left   = Math.max(dim.left,   bounds.left);
 	var top    = Math.max(dim.top,    bounds.top);
 	var right  = Math.min(dim.right,  bounds.right);
@@ -139,7 +138,7 @@ exports.erase = function (source, destination, dim, bounds) {
 	var nBytes = dstData.length;
 
 	for (var i = 0; i < nBytes; i += 4) {
-		dstData[i + 3] *= (255 - srcData[i + 3]) / 255;
+		dstData[i + 3] *= (255 - alpha * srcData[i + 3]) / 255;
 	}
 
 	destination.putImageData(dstBuffer, left, top);
@@ -153,7 +152,7 @@ function overlay(colorSource, colordDest) {
 		return 255 - 2 * (255 - colorSource) * (255 - colordDest) / 255;
 	}
 }
-exports.overlay = function (source, destination, dim, bounds) { blend(overlay, source, destination, dim, bounds); };
+exports.overlay = function (source, destination, alpha, dim, bounds) { blend(overlay, source, destination, alpha, dim, bounds); };
 
 // Flash Blend mode 14
 function hardlight(colorSource, colordDest) {
@@ -163,4 +162,4 @@ function hardlight(colorSource, colordDest) {
 		return 255 - 2 * (255 - colorSource) * (255 - colordDest) / 255;
 	}
 }
-exports.hardlight = function (source, destination, dim, bounds) { blend(hardlight, source, destination, dim, bounds); };
+exports.hardlight = function (source, destination, alpha, dim, bounds) { blend(hardlight, source, destination, alpha, dim, bounds); };

@@ -1,6 +1,5 @@
 // See http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/swf/pdf/swf-file-format-spec.pdf
 
-'use strict';
 
 var Base = require('./base.js');
 var Stream = require('./stream.js');
@@ -33,7 +32,7 @@ function dumpVal(str, max) {
 	if (len < str.length) hex += '...';
 	else hex = hex.substr(0, hex.length - 1);
 	return '(' + len + ' bytes)' + hex + ' | ' + txt;
-};
+}
 
 SwfParser.prototype = {
 
@@ -280,12 +279,12 @@ SwfParser.prototype = {
 		};
 
 		var sceneCount = stream.readEncodedU32();
-		for (var i = 0; i < sceneCount; i += 1) {
+		for (var s = 0; s < sceneCount; s += 1) {
 			sceneNames.push({ offset: stream.readEncodedU32(), name: stream.readString() });
 		}
 
 		var frameLabelCount = stream.readEncodedU32();
-		for (var i = 0; i < frameLabelCount; i += 1) {
+		for (var l = 0; l < frameLabelCount; l += 1) {
 			sceneLabels.push({ number: stream.readEncodedU32(), label: stream.readString() });
 		}
 
@@ -1052,9 +1051,20 @@ SwfParser.prototype = {
 	// console.error('numGlyphs is', numGlyphs)
 
 			n = numGlyphs;
-			while (n--) { font.useWideOffsets? stream.readUI32(): stream.readUI16(); } // offsetTable
+			while (n--) {
+				if (font.useWideOffsets) {
+					stream.readUI32();
+				} else {
+					stream.readUI16();
+				}
+			} // offsetTable
 			// if (stream.offset - startingOffset !== len) {
-				font.useWideOffsets? stream.readUI32(): stream.readUI16(); // codeTableOffset
+			// codeTableOffset
+			if (font.useWideOffsets) {
+				stream.readUI32();
+			} else {
+				stream.readUI16();
+			}
 			// }
 
 	// console.error('offset 5', stream.offset)
@@ -1105,7 +1115,7 @@ SwfParser.prototype = {
 // console.error('offset 8', stream.offset, len)
 
 		if (stream.offset - startingOffset < len) {
-			console.warn('[_handleDefineFont3] Discrepancy in the number of bytes read: read ' + (stream.offset - startingOffset) + ' bytes, expected ' + len + ' bytes.')
+			console.warn('[_handleDefineFont3] Discrepancy in the number of bytes read: read ' + (stream.offset - startingOffset) + ' bytes, expected ' + len + ' bytes.');
 			stream.offset = startingOffset + len;
 		}
 
@@ -1189,8 +1199,8 @@ SwfParser.prototype = {
 				break;
 			}
 
-			var type = hdr >> 7;
-			if (type) {
+			var isTextRecord = hdr >> 7;
+			if (isTextRecord) {
 				var flags = hdr & 0x0f;
 				if (flags) {
 					var f = Base.textStyleFlags;

@@ -1,4 +1,3 @@
-'use strict';
 
 var zlib      = require('zlib');
 var getCanvas = require('./GetCanvas');
@@ -23,7 +22,7 @@ function renderPng(swfObject, whenDone) {
 		swfObject.data = buffer;
 		translatePng(swfObject, whenDone);
 	});
-};
+}
 
 function renderJpg(swfObject, whenDone) {
 	var self = this;
@@ -35,7 +34,7 @@ function renderJpg(swfObject, whenDone) {
 	} else {
 		translateJpg(swfObject, whenDone);
 	}
-};
+}
 
 function inflate(strdata, onData) {
 	var data = new Buffer(strdata);
@@ -43,7 +42,7 @@ function inflate(strdata, onData) {
 		if (error) throw new Error('Invalid compressed data. ' + error);
 		onData(buffer);
 	});
-};
+}
 
 function translateJpg(swfObject, whenDone) {
 	// Image creation
@@ -80,7 +79,7 @@ function translateJpg(swfObject, whenDone) {
 	}
 
 	whenDone(swfObject, canvas);
-};
+}
 
 function translatePng(swfObject, whenDone) {
 	var width  = swfObject.width;
@@ -99,30 +98,32 @@ function translatePng(swfObject, whenDone) {
 	var imageData = context.getImageData(0, 0, width, height);
 	var pxData = imageData.data;
 
+	var idx;
 	var alpha = 255;
 	var premultiplierInv = 1;
 	for (var j = 0; j < height; j += 1) {
 		for (var i = 0; i < width; i += 1) {
 			if (colorTableSize) {
-				var idx = data[cmIdx] * bpp;
+				idx = data[cmIdx] * bpp;
 				// Warning: might not be working all the time
 				// is using a color table the only reason for alpha being the last component of the pixel color?
 				if (withAlpha) {
 					alpha = data[idx + 3];
 					premultiplierInv = 255 / alpha;
 				}
-				var premultiplierInv = 255 / alpha;
+
 				pxData[pxIdx]     = data[idx + 0] * premultiplierInv;
 				pxData[pxIdx + 1] = data[idx + 1] * premultiplierInv;
 				pxData[pxIdx + 2] = data[idx + 2] * premultiplierInv;
 				pxData[pxIdx + 3] = alpha;
 			} else {
-				var idx = cmIdx * bpp;
+				idx = cmIdx * bpp;
 				if (withAlpha) {
 					alpha = data[idx];
 					premultiplierInv = 255 / alpha;
 					idx += 1;
 				}
+
 				pxData[pxIdx]     = data[idx + 0] * premultiplierInv;
 				pxData[pxIdx + 1] = data[idx + 1] * premultiplierInv;
 				pxData[pxIdx + 2] = data[idx + 2] * premultiplierInv;
@@ -138,4 +139,4 @@ function translatePng(swfObject, whenDone) {
 	context.putImageData(imageData, 0, 0);
 
 	whenDone(swfObject, canvas);
-};
+}

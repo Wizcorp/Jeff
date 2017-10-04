@@ -1,4 +1,3 @@
-'use strict';
 
 function getFileName(uri) {
 	var separator = uri.match('.d2p') ? ':' : '/';

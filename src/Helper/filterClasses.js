@@ -1,4 +1,3 @@
-'use strict';
 
 function filterClasses(classList, exclusiveList, ignoreList, ignoreExpression) {
 	var className;

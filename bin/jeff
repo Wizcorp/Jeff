@@ -19,15 +19,12 @@ program
 .option('-f, --renderFrames <boolean/array of frames>', 'To extract specified frames of the animations as PNGs', 'false')
 
 // Optimisation options
-.option('-O, --imageOptim <boolean>',                   'To apply a lossless image compression', 'false')
-.option('-q, --imageQuality <quality>',                 'Image quality. From 0 to 100', '100')
 .option('-a, --createAtlas <boolean>',                  'To extract all the images of an animation into a single atlas', 'false')
 .option('-p, --powerOf2Images <boolean>',               'To set the dimensions of output images to powers of 2', 'false')
 .option('-M, --maxImageDim <number>',                   'Maximum image dimension', '2048')
-.option('-m, --simplify <boolean>',                     'To simplify animations (reduce number of symbols)', 'false')
 .option('-b, --beautify <boolean>',                     'To beautify JSON output', 'false')
-.option('-n, --flatten <boolean>',                      'To extract a flat animation structure rather than a hierarchical structure', 'false')
-.option('-c, --compressMatrices <boolean>',             'To extract animations with matrices under a compressed format', 'false')
+.option('-c, --collapse <boolean>',                     'To extract a colapsed flat animation structure rather than a hierarchical structure', 'false')
+.option('-B, --prerenderBlendings <boolean>',           'To prerender sprites with blend modes', 'false')
 
 // Advanced options
 .option('-R, --exportAtRoot <boolean>',                 'To export everything at the root of the output directory', 'false')
@@ -51,15 +48,12 @@ var exportParams = {
 	renderFrames:       JSON.parse(program.renderFrames),
 
 	// Optimisation options
-	imageOptim:         JSON.parse(program.imageOptim),
-	imageQuality:       JSON.parse(program.imageQuality),
 	createAtlas:        JSON.parse(program.createAtlas),
 	powerOf2Images:     JSON.parse(program.powerOf2Images),
 	maxImageDim:        JSON.parse(program.maxImageDim),
-	simplify:           JSON.parse(program.simplify),
 	beautify:           JSON.parse(program.beautify),
-	flatten:            JSON.parse(program.flatten),
-	compressMatrices:   JSON.parse(program.compressMatrices),
+	collapse:           JSON.parse(program.collapse),
+	prerenderBlendings: JSON.parse(program.prerenderBlendings),
 
 	// Advanced options
 	splitClasses:       JSON.parse(program.splitClasses),

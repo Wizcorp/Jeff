@@ -1,6 +1,5 @@
-'use strict';
 
-var createSymbols     = require('./createSymbols');
+var createItems       = require('./createItems');
 var addClassNames     = require('./addClassNames');
 var generateChildren  = require('./generateChildren');
 var addContainer      = require('./addContainer');
@@ -10,14 +9,17 @@ var computeDimensions = require('./computeDimensions');
 
 function processSwfObjects(swfObjects, allClasses, extractor) {
 
-	// Creating symbols from swfObjects
-	var symbols = createSymbols(swfObjects);
+	// Creating items from swfObjects
+	var items = createItems(swfObjects, extractor._options.verbosity === 3);
+	var symbols = items.symbols;
+	var sprites = items.sprites;
+	var itemsById = items.itemsById;
 
 	// Adding class names to symbols
 	var classSymbols = addClassNames(symbols, allClasses);
 
 	// Generating symbols' lists of children over time from swfObject timeline
-	generateChildren(symbols);
+	generateChildren(symbols, items.itemsById);
 
 	// Adding animation container, if any
 	if (extractor._options.container) addContainer(symbols, classSymbols, extractor._options.container);
@@ -26,11 +28,11 @@ function processSwfObjects(swfObjects, allClasses, extractor) {
 	if (extractor._options.removeList) removeSymbols(symbols, classSymbols, extractor._options.removeList);
 
 	// Computing bounds per frame for each symbol
-	computeBounds(symbols);
+	computeBounds(symbols, sprites);
 
-	// Computing maximum dimensions per class for each graphic
-	computeDimensions(symbols, allClasses);
+	// Computing maximum dimensions per class for each sprite
+	computeDimensions(itemsById, allClasses);
 
-	return symbols;
+	return items;
 }
 module.exports = processSwfObjects;

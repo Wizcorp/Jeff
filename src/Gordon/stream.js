@@ -1,5 +1,4 @@
 /* jshint white: false, curly: false */
-'use strict';
 
 var zlib = require('zlib');
 
@@ -108,16 +107,6 @@ module.exports = Stream;
 				if(this._lastOffset !== this.offset || this._bitOffset === 8){
 					this._bitBuffer = this._buffer[this.offset++];
 					this._lastOffset = this.offset;
-					this._bitOffset = 0;
-				}
-				val = (val << 1) | (this._bitBuffer & (0x80 >> this._bitOffset++) ? 1 : 0);
-			}
-			return val;
-
-			var val = 0;
-			for(var i = 0; i < numBits; i++){
-				if(8 === this._bitOffset){
-					this._bitBuffer = this._buffer[this.offset++];
 					this._bitOffset = 0;
 				}
 				val = (val << 1) | (this._bitBuffer & (0x80 >> this._bitOffset++) ? 1 : 0);

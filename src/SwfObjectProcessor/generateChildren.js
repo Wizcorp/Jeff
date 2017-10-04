@@ -1,4 +1,3 @@
-'use strict';
 
 var processShape = require('./processShape');
 
@@ -48,7 +47,7 @@ function interpolateGradient(gradients, a, b) {
 	};
 }
 
-function createMorphedShape(symbols, symbol, ratio) {
+function createMorphedShape(items, symbol, ratio) {
 	/* jshint maxstatements: 100 */
 
 	var symbolMorphings = symbol.morphings;
@@ -62,20 +61,20 @@ function createMorphedShape(symbols, symbol, ratio) {
 		return symbolMorphings[ratio];
 	}
 
-	var morphId = symbols.length;
+	var morphId = items.length;
 	symbolMorphings[ratio] = morphId;
 
 	var swfObject = symbol.swfObject;
 	var morphedSymbol = {
 		id:        morphId,
-		isGraphic: true,
+		isSprite:  true,
 		isShape:   true,
 		isMorphed: true,
 		swfObject: swfObject,
 		maxDims:   {},
 		parents:   []
 	};
-	symbols.push(morphedSymbol);
+	items.push(morphedSymbol);
 
 	// interpolating the shape
 	var shapes = [];
@@ -223,25 +222,26 @@ function createMorphedShape(symbols, symbol, ratio) {
 	return morphId;
 }
 
-function generateChildren(symbol, symbols) {
+function generateChildren(symbol, items) {
 	/* jshint maxcomplexity: 50 */
 	/* jshint maxstatements: 150 */
 
 	var f;
-	var objectTransform, transforms;
+	var objectTransform;
 	var objectColor, color;
 	var objectLayerData = {}; // An object containing the last object data for each depth
 	var objectData, objectId;
 	var depths = {}; // Contains element mapped by depth
 	var depth, d, depthArray, nDepths;
 	var timeline = symbol.swfObject.timeline;
-	// var duration = timeline.length;
-	var duration = symbol.duration;
-	for (f = 0; f < duration; f += 1) {
+	// var frameCount = timeline.length;
+	var frameCount = symbol.frameCount;
+	var morphedShapeReplacements = [];
+	for (f = 0; f < frameCount; f += 1) {
 
 		if (timeline[f] !== undefined) {
 			var displayList = timeline[f].displayList;
-			var morphedShapeReplacements = [];
+			morphedShapeReplacements = [];
 			for (d = 0, depthArray = Object.keys(displayList), nDepths = depthArray.length; d < nDepths; d += 1) {
 				depth = depthArray[d];
 				objectData = displayList[depth];
@@ -268,16 +268,16 @@ function generateChildren(symbol, symbols) {
 
 				// Testing for special case when object is a morphing
 				objectData = objectLayerData[depth];
-				var childSymbol = symbols[objectData.id];
+				var childItem = items[objectData.id];
 
-				if (childSymbol && childSymbol.isMorphing) {
+				if (childItem && childItem.isMorphing) {
 					var ratio = objectData.ratio || 0;
 
 					// Creating a new graphic that correspond to interpolation of the morphing with respect to the given ratio
-					var morphedShapeId = createMorphedShape(symbols, childSymbol, ratio);
+					var morphedShapeId = createMorphedShape(items, childItem, ratio);
 
 					// Replacing symbol id
-					morphedShapeReplacements.push({ depth: depth, morphId: morphedShapeId, originalId: childSymbol.id });
+					morphedShapeReplacements.push({ depth: depth, morphId: morphedShapeId, originalId: childItem.id });
 				}
 			}
 		}
@@ -311,7 +311,7 @@ function generateChildren(symbol, symbols) {
 					objectTransform = { scaleX: 1, scaleY: 1, moveX: 0, moveY: 0, skewX: 0, skewY: 0 };
 				}
 
-				transforms = [objectTransform.scaleX, objectTransform.skewX, objectTransform.skewY, objectTransform.scaleY, objectTransform.moveX / 20, objectTransform.moveY / 20];
+				var transform = [objectTransform.scaleX, objectTransform.skewX, objectTransform.skewY, objectTransform.scaleY, objectTransform.moveX / 20, objectTransform.moveY / 20];
 
 				if (objectColor) { // object color is not always defined
 					var rMult = objectColor.multR;
@@ -331,10 +331,10 @@ function generateChildren(symbol, symbols) {
 				}
 
 				var childData = {
-					frame:      f,
-					transforms: transforms,
-					color:      color,
-					id:         objectId
+					frame:     f,
+					transform: transform,
+					color:     color,
+					id:        objectId
 				};
 
 				if (objectData.clipDepth) {
@@ -372,16 +372,16 @@ function generateChildren(symbol, symbols) {
 				// }
 
 				for (var p in objectData) {
-					if (   p !== 'clipDepth'
-						&& p !== 'cxform'      // supported
-						&& p !== 'matrix'      // supported
-						&& p !== 'id'          // supported
-						&& p !== 'depth'       // supported
-						&& p !== 'filters'     // supported
-						&& p !== 'blendMode'   // supported
-						&& p !== 'ratio'       // supported
-						&& p !== 'name'        // supported
-						&& p !== 'bitmapCache' // not supported, should it be? might improve extraction speed (it optimises blending operations)
+					if (p !== 'clipDepth' &&
+						p !== 'cxform' &&       // supported
+						p !== 'matrix' &&       // supported
+						p !== 'id' &&           // supported
+						p !== 'depth' &&        // supported
+						p !== 'filters' &&      // supported
+						p !== 'blendMode' &&    // supported
+						p !== 'ratio' &&        // supported
+						p !== 'name' &&         // supported
+						p !== 'bitmapCache'     // not supported, should it be? might improve extraction speed (it optimises blending operations)
 					) {
 						console.log('found unused property!', p, objectData[p], objectData.id);
 					}
@@ -406,8 +406,8 @@ function generateChildren(symbol, symbols) {
 	}
 	orderedDepths.sort(function (a, b) { return b.depth - a.depth; });
 
-	var child, children = [];
-	symbol.children = children;
+	var child;
+	var children = symbol.children;
 	for (var i = 0; i < orderedDepths.length; i += 1) {
 		var content = orderedDepths[i].content;
 		depth = orderedDepths[i].depth;
@@ -422,14 +422,14 @@ function generateChildren(symbol, symbols) {
 			var names      = [];
 
 			var nFrames = animData.length;
-			for (var f = 0; f < nFrames; f += 1) {
+			for (f = 0; f < nFrames; f += 1) {
 				var frameData = animData[f];
 				var frame = frameData.frame;
 
-				if (frameData.transforms) transforms.push(frameData.transforms);
-				if (frameData.color)      colors.push(frameData.color);
-				if (frameData.filters)    filters.push(frameData.filters);
-				if (frameData.blendMode)  blendModes.push(frameData.blendMode);
+				if (frameData.transform) transforms.push(frameData.transform);
+				if (frameData.color)     colors.push(frameData.color);
+				if (frameData.filters)   filters.push(frameData.filters);
+				if (frameData.blendMode) blendModes.push(frameData.blendMode);
 
 				var nextFrame;
 				if (f < nFrames - 1) {
@@ -469,7 +469,7 @@ function generateChildren(symbol, symbols) {
 	var frames = [];
 	symbol.frames = frames;
 	symbol.frameNames = [];
-	for (f = 0; f < duration; f += 1) {
+	for (f = 0; f < frameCount; f += 1) {
 		frames[f] = [];
 		symbol.frameNames[f] = symbol.className + '_frame' + f;
 	}
@@ -482,13 +482,12 @@ function generateChildren(symbol, symbols) {
 		var startFrame  = childFrames[0];
 		var endFrame    = childFrames[1];
 
-		var childtransforms = child.transforms;
-		var childColors   = child.colors;
+		var childTransforms = child.transforms;
+		var childColors     = child.colors;
 		for (f = startFrame; f <= endFrame; f += 1) {
-			var frameData;
 			frames[f].push({
 				id:         childId,
-				transforms: childtransforms[f - startFrame],
+				transforms: childTransforms[f - startFrame],
 				color:      childColors[f - startFrame]
 			});
 		}
@@ -497,19 +496,13 @@ function generateChildren(symbol, symbols) {
 	// Adding parent id to each symbol present in children
 	var symbolId = symbol.id;
 	for (c = 0; c < children.length; c += 1) {
-		symbols[children[c].id].parents[symbolId] = symbolId;
+		var item = items[children[c].id];
+		item.parents[symbolId] = symbolId;
 	}
 }
 
-function generateAllChildren(symbols) {
-	var nbSymbols = symbols.length;
-	for (var s = 0; s < nbSymbols; s += 1) {
-		var symbol = symbols[s];
-		if (symbol.swfObject.timeline) {
-			// Generate children if symbol has a timeline
-			generateChildren(symbol, symbols);
-		}
+module.exports = function generateAllChildren(symbols, items) {
+	for (var symbolId in symbols) {
+		generateChildren(symbols[symbolId], items);
 	}
-}
-
-module.exports = generateAllChildren;
+};

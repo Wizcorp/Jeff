@@ -1,4 +1,7 @@
-'use strict';
+var comparators = require('./comparators.js');
+var areObjectsDifferent    = comparators.areObjectsDifferent;
+var areTransformsDifferent = comparators.areTransformsDifferent;
+var areColorsDifferent     = comparators.areColorsDifferent;
 
 function cmpTransforms(a, b) {
 	if (a[0] !== b[0]) return a[0] - b[0];
@@ -18,14 +21,6 @@ function cmpColors(a, b) {
 	if (a[5] !== b[5]) return a[5] - b[5];
 	if (a[6] !== b[6]) return a[6] - b[6];
 	return a[7] - b[7];
-}
-
-function areTransformsDifferent(a, b) {
-	return a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2] || a[3] !== b[3] || a[4] !== b[4] || a[5] !== b[5];
-}
-
-function areColorsDifferent(a, b) {
-	return a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2] || a[3] !== b[3] || a[4] !== b[4] || a[5] !== b[5] || a[6] !== b[6] || a[7] !== b[7];
 }
 
 function findMatrixIdx(transforms, transform) {
@@ -70,10 +65,28 @@ function findColorIdx(colors, color) {
 	throw new Error('[findColorIdx] Color index not found');
 }
 
-function delocateTransforms(symbols) {
+function findFilterIdx(filters, filter) {
+	// Filters are NOT supposed sorted
+	for (var f = 0; f < filters.length; f += 1) {
+		if (areObjectsDifferent(filter, filters[f])) {
+			continue;
+		}
+
+		return f;
+	}
+
+	return -1;
+}
+
+function delocateMatrices(exportData) {
 	/* jshint maxstatements: 100 */
 	var delocatedTransformsTmp = [];
-	var delocatedColorsTmp   = [];
+	var delocatedColorsTmp     = [];
+
+	// TODO: delocate filters
+	var delocatedFilters = [];
+
+	var symbols = exportData.symbols;
 
 	var t, c;
 	var id, symbol, children;
@@ -82,24 +95,37 @@ function delocateTransforms(symbols) {
 		symbol = symbols[id];
 		children = symbol.children;
 
-		if (children) {
-			for (c1 = 0; c1 < children.length; c1 += 1) {
-				child = children[c1];
-				transforms = child.transforms;
-				colors   = child.colors;
+		for (c1 = 0; c1 < children.length; c1 += 1) {
+			child = children[c1];
+			transforms = child.transforms;
+			colors   = child.colors;
 
-				for (t = 0; t < transforms.length; t += 1) {
-					delocatedTransformsTmp.push(transforms[t]);
-				}
+			for (t = 0; t < transforms.length; t += 1) {
+				delocatedTransformsTmp.push(transforms[t]);
+			}
 
-				for (c = 0; c < colors.length; c += 1) {
-					delocatedColorsTmp.push(colors[c]);
+			for (c = 0; c < colors.length; c += 1) {
+				delocatedColorsTmp.push(colors[c]);
+			}
+
+			var filters = child.filters;
+			if (filters) {
+				for (var f = 0; f < filters.length; f += 1) {
+					// searching for current filter in list of existing filters
+					// N.B not using binary search as for transformation and color matrices
+					// (we supposed that few filters are used, therefore no need to optimized)
+					var filter = filters[f];
+					var filterIndex = findFilterIdx(delocatedFilters, filter);
+					if (filterIndex === -1) {
+						filterIndex = delocatedFilters.length;
+						delocatedFilters.push(filter);
+					}
+					filters[f] = filterIndex;
 				}
 			}
 		}
 	}
 
-	var compressedMatrices = {};
 	var current, previous;
 
 	var delocatedTransforms;
@@ -116,7 +142,7 @@ function delocateTransforms(symbols) {
 				previous = current;
 			}
 		}
-		compressedMatrices.transforms = delocatedTransforms;
+		exportData.transforms = delocatedTransforms;
 	}
 
 	var delocatedColors;
@@ -134,7 +160,11 @@ function delocateTransforms(symbols) {
 			}
 		}
 
-		compressedMatrices.colors = delocatedColors;
+		exportData.colors = delocatedColors;
+	}
+
+	if (delocatedFilters.length > 0) {
+		exportData.filters = delocatedFilters;
 	}
 
 	// Final step: replacing transforms and colors in the animations
@@ -142,27 +172,19 @@ function delocateTransforms(symbols) {
 	for (id in symbols) {
 		symbol = symbols[id];
 		children = symbol.children;
+		for (c1 = 0; c1 < children.length; c1 += 1) {
+			child = children[c1];
+			transforms = child.transforms;
+			colors   = child.colors;
 
-		if (children) {
-			for (c1 = 0; c1 < children.length; c1 += 1) {
-				child = children[c1];
-				// child.symbolId = id;
-				// child.childId = c1;
-				transforms = child.transforms;
-				colors   = child.colors;
+			for (t = 0; t < transforms.length; t += 1) {
+				transforms[t] = findMatrixIdx(delocatedTransforms, transforms[t]);
+			}
 
-				for (t = 0; t < transforms.length; t += 1) {
-					transforms[t] = findMatrixIdx(delocatedTransforms, transforms[t]);
-				}
-
-				for (c = 0; c < colors.length; c += 1) {
-					colors[c] = findColorIdx(delocatedColors, colors[c]);
-				}
-
+			for (c = 0; c < colors.length; c += 1) {
+				colors[c] = findColorIdx(delocatedColors, colors[c]);
 			}
 		}
 	}
-
-	return compressedMatrices;
 }
-module.exports = delocateTransforms;
+module.exports = delocateMatrices;

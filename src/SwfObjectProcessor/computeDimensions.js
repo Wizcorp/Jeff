@@ -1,4 +1,3 @@
-'use strict';
 
 function multiplyTransforms(t0, t1) {
 	var a0 = t0[0];
@@ -18,10 +17,10 @@ function multiplyTransforms(t0, t1) {
 	];
 }
 
-function computeSymbolDimension(symbols, symbol, transform, frame, originClassName) {
+function computeSpriteDimension(items, item, transform, frame, originClassName) {
 
-	if (symbol.isGraphic) {
-		var bounds = symbol.bounds[0];
+	if (item.isSprite) {
+		var bounds = item.bounds;
 		var width  = bounds.right  - bounds.left;
 		var height = bounds.bottom - bounds.top;
 		var a = transform[0] * width;
@@ -30,12 +29,12 @@ function computeSymbolDimension(symbols, symbol, transform, frame, originClassNa
 		var d = transform[3] * height;
 		var w = Math.sqrt(a * a + b * b);
 		var h = Math.sqrt(c * c + d * d);
-		var maxDimForClass = symbol.maxDims[originClassName];
+		var maxDimForClass = item.maxDims[originClassName];
 		if (maxDimForClass) {
 			maxDimForClass.width  = Math.max(maxDimForClass.width,  w);
 			maxDimForClass.height = Math.max(maxDimForClass.height, h);
 		} else {
-			symbol.maxDims[originClassName] = {
+			item.maxDims[originClassName] = {
 				width:  w,
 				height: h
 			};
@@ -43,14 +42,14 @@ function computeSymbolDimension(symbols, symbol, transform, frame, originClassNa
 	}
 
 
-	if (!symbol.isAnimation) {
+	if (!item.isSymbol) {
 		return;
 	}
 
-	var duration = symbol.duration;
-	frame = frame % duration;
+	var frameCount = item.frameCount;
+	frame = frame % frameCount;
 
-	var children = symbol.children;
+	var children = item.children;
 	for (var c1 = 0; c1 < children.length; c1 += 1) {
 		var childData  = children[c1];
 		var startFrame = childData.frames[0];
@@ -61,20 +60,20 @@ function computeSymbolDimension(symbols, symbol, transform, frame, originClassNa
 		if (startFrame <= frame && frame <= endFrame) {
 			var childFrame     = frame - startFrame;
 			var childTransform = multiplyTransforms(transform, transforms[childFrame]);
-			computeSymbolDimension(symbols, symbols[childId], childTransform, childFrame, originClassName);
+			computeSpriteDimension(items, items[childId], childTransform, childFrame, originClassName);
 		}
 	}
 }
 
-function computeDimensions(symbols, allClasses) {
+function computeDimensions(items, allClasses) {
 	for (var className in allClasses) {
 		var classIds  = allClasses[className];
 		var nbClasses = classIds.length;
 		for (var c = 0; c < nbClasses; c += 1) {
-			var classSymbol = symbols[classIds[c]];
-			var duration    = classSymbol.duration;
-			for (var f = 0; f < duration; f += 1) {
-				computeSymbolDimension(symbols, classSymbol, [1, 0, 0, 1, 0, 0], f, className);
+			var classSymbol = items[classIds[c]];
+			var frameCount  = classSymbol.frameCount;
+			for (var f = 0; f < frameCount; f += 1) {
+				computeSpriteDimension(items, classSymbol, [1, 0, 0, 1, 0, 0], f, className);
 			}
 		}
 	}

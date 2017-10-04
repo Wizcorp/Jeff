@@ -1,4 +1,3 @@
-'use strict';
 
 function groupSwfObjects(swfObjectGroups) {
 	// Merging swf objects from several input swf files
