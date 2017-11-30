@@ -72,7 +72,6 @@ SwfParser.prototype = {
 	// exported, otherwise the number of exported classes can be really high.
 	// However this function should not appear in this component as it is meant
 	// to extract regular swf files.
-	// It should possible to determine the symbols of the swl table from the dofus database
 
 	// Special table at the head of a ".swl" file; we did not find why this is useful...
 	// Maybe to be able to easily look for which symbols are defined in a .swf without
