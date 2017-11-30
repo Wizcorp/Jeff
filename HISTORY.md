@@ -1,5 +1,9 @@
 # Release history
 
+## v0.2.11
+Added a method on Gordon's Stream class to retrieve remaining buffer data
+Removed irrelevant comment
+
 ## v0.2.10
 Framerate value in exported meta data is now matching original files framerate
 Jeff version in exported meta data is now dynamic

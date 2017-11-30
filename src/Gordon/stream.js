@@ -315,6 +315,10 @@ module.exports = Stream;
 				self._nBytes  = self._buffer.length;
 				whenDone();
 			});
+		},
+
+		getRemainingData: function () {
+			return this._buffer.slice(this.offset);
 		}
 	};
 })();
