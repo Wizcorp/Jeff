@@ -1,5 +1,6 @@
 /* jshint camelcase: false */ //for js_beautify and indent_size
 'use strict';
+var util   	 = require('util');
 
 var fs       = require('fs-extra');
 var glob     = require('glob');
@@ -20,6 +21,11 @@ var JSON_WRITE_OPTIONS = { encoding:'binary' };
 
 // Jeff's only API method
 function extractSwf(exportParams, cb) {
+	
+	if(exportParams.verbosity > 8){
+		console.log('Options: '+util.inspect(exportParams));
+	}
+
 	var jeff = new Jeff();
 
 	// Setting up Jeff ...
@@ -104,6 +110,8 @@ function JeffOptions(params) {
 	this.customWriteFile     = params.customWriteFile;
 	this.customReadFile      = params.customReadFile;
 	this.fixedSize           = params.fixedSize;
+	this.forceVersion 		 = params.forceVersion;
+	this.version 			 = params.version;
 	this.fallbackFrameRate   = params.fallbackFrameRate   || 25;
 	// 1: minimal log level, 10: maximum log level. TODO: needs to be implemented on every console.warn/log/error
 	this.verbosity           = params.verbosity           || 3;
@@ -227,15 +235,26 @@ Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 	var swfObjects = [];
 	function onFileRead(error, swfData) {
 		if (error) return nextSwfCb(error);
-		self._parser.parse(swfName, swfData,
+		self._parser.parse(swfName, swfData, self._options,
 			function (swfObject) {
 				var id = swfObject.id;
 				swfObject._swfName = swfName;
-				// console.log('object', JSON.stringify(swfObject));
-				// console.log('properties!!', swfObject.id);
-				// for (var p in swfObject) {
-				// 	console.log(p);
-				// }
+				
+				if(self._options.verbosity > 5)
+				{
+
+					console.log('parsing: ' + swfName);
+					
+					//console.log('object', JSON.stringify(swfObject));
+					console.log('');
+					console.log('--Object-- ');
+					console.log('Id', swfObject.id);
+					console.log('Type', swfObject.type);
+					for (var p in swfObject) {
+						console.log(p);
+					}
+				}
+
 				if (id === undefined) {
 
 					if (swfObject.type === 'scalingGrid') {

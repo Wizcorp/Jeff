@@ -2,6 +2,7 @@
 
 'use strict';
 
+var util = require('util');
 var Base = require('./base.js');
 var Stream = require('./stream.js');
 
@@ -42,25 +43,40 @@ SwfParser.prototype = {
 	// swfData is a buffer containing the SWF data
 	// onData(object) will be called several times with the result of the parsing of 1 object
 	// cb(error) will be called at the end or upon error
-	parse: function (swfName, swfData, onData, cb) {
+	parse: function (swfName, swfData, options, onData, cb) {
 		this.swfName = swfName;
+		this._options = options;
 		this.onData  = onData;
 
-		var stream = new Stream(swfData);
+
+		var stream = new Stream(swfData, options);
 		this._readSwlTable(stream); // Symbol table not used
 		var sign = stream.readString(3);
 
-		this.version = stream.readUI8();
+		var version = stream.readUI8();
 		this.fileLen = stream.readUI32();
 
+		if(this._options.forceVersion == null || this._options.forceVersion == -1){
+			this._options.version = version;
+		}
+		else{
+			this._options.version = forceVersion;
+		}
+		
+		if(this._options.verbosity > 3){
+			console.log('Attempting to decompile for SWF Version:', this._options.version);
+		}
+
 		var signatures = Base.validSignatures;
-		if (sign === signatures.COMPRESSED_SWF) {
+		if (sign === signatures.COMPRESSED_ZLIB_SWF) {
 			var self = this;
 			stream.decompressAsync(function () {
 				self._parseSwf(stream, cb);
 			});
 		} else if (sign === signatures.SWF) {
 			this._parseSwf(stream, cb);
+		} else if (sign === signatures.COMPRESSED_LZMA_SWF) {
+			cb('No Support for LZMA Compressed SWF file: ' + swfName);
 		} else {
 			cb('Invalid SWF file: ' + swfName);
 		}
@@ -104,7 +120,7 @@ SwfParser.prototype = {
 		//create a "header" object with file level info
 		this.onData({
 			type: 'header',
-			version: this.version,
+			version: this._options.version,
 			fileLength: this.fileLen,
 			frameSize: stream.readRect(),
 			frameRate: stream.readUI16() / 256
@@ -977,7 +993,7 @@ SwfParser.prototype = {
 			isUTF8:         stream.readBool(),
 			isItalic:       stream.readBool(),
 			isBold:         stream.readBool(),
-			languageCode:   (this.version > 5) ? stream.readLanguageCode() : 0,
+			languageCode:   (this._options.version > 5) ? stream.readLanguageCode() : 0,
 			name:           stream.readUI8() && stream.readString()
 		};
 
@@ -1022,7 +1038,7 @@ SwfParser.prototype = {
 
 	_handleDefineFont3: function (stream, offset, len) {
 		var startingOffset = stream.offset;
-// console.error('version', this.version)
+// console.error('version', this._options.version)
 // console.error('offset -1', stream.offset)
 		var id = stream.readUI16();
 // console.error('offset 0', stream.offset)
@@ -1037,7 +1053,7 @@ SwfParser.prototype = {
 			isUTF8:         stream.readBool(),
 			isItalic:       stream.readBool(),
 			isBold:         stream.readBool(),
-			languageCode:   (this.version > 5) ? stream.readLanguageCode() : 0,
+			languageCode:   (this._options.version > 5) ? stream.readLanguageCode() : 0,
 			name:           stream.readUI8() && stream.readString()
 		};
 

@@ -17,7 +17,8 @@ var Base = {
 	},
 	validSignatures: {
 		SWF: 'FWS',
-		COMPRESSED_SWF: 'CWS'
+		COMPRESSED_ZLIB_SWF: 'CWS',
+		COMPRESSED_LZMA_SWF: 'ZWS'
 	},
 	readyStates: {
 		LOADING: 0,

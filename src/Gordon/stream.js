@@ -3,10 +3,12 @@
 
 var zlib = require('zlib');
 
-function Stream(data){
+function Stream(data, options){
 	this._buffer = new Buffer(data);
 	this._nBytes = data.length;
 	this.offset  = 0;
+
+	this._options = options;
 
 	this._bitBuffer  = null;
 	this._bitOffset  = 8;
@@ -217,14 +219,17 @@ module.exports = Stream;
 				// We simply skip this useless zeros here, but verify it was actually zeros we skipped.
 				// If one day we find something else than an all zero rect (e.g. a 0,0,1,1) we will
 				// have to adapt some more here...
-
+				
 				// Edit: it looks like this hack is making the export fail on some swf
 				// (may be those from the latest flash versions?)
 				// So the bytes need to be tested in order to know whether the hack is necessary
-				if (this._buffer.readUInt16LE(this.offset) === 0) {
-					var empty = this.readBytes(16); //console.warn('numBits=1, rect:',rect)
-					for(var i = 0; i < 16; i++) {
-						if(empty[i] !== 0) { throw new Error('Unexpected rectangle data'); }
+				if(this._options.version < 30)//Not exactly sure which version makes this work/break
+				{
+					if (this._buffer.readUInt16LE(this.offset) === 0) {
+						var empty = this.readBytes(16); //console.warn('numBits=1, rect:',rect)
+						for(var i = 0; i < 16; i++) {
+							if(empty[i] !== 0) { throw new Error('Unexpected rectangle data'); }
+						}
 					}
 				}
 			}

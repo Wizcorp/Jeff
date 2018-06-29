@@ -36,6 +36,8 @@ program
 .option('-I, --ignoreImages <boolean>',                 'Not to export images', 'false')
 .option('-F, --filtering <filtering method>',           'Filtering that should be used when rendering the animation', 'linear')
 .option('-e, --outlineEmphasis <coefficient>',          'Emphasis of outlines when rendering Flash vectorial drawings', '1')
+.option('-V, --version <int>', 			 		        'If specified, force decompiler to attempt to decompile as if the swf was specified version', '-1')
+.option('-L, --verbosity <int>', 			 			'(L)og Level. 1-10, 1 showing least, 10 showing the most. Default is 3', '3')
 
 .parse(process.argv);
 
@@ -67,7 +69,9 @@ var exportParams = {
 	ignoreData:         JSON.parse(program.ignoreData),
 	ignoreImages:       JSON.parse(program.ignoreImages),
 	filtering:          program.filtering,
-	outlineEmphasis:    JSON.parse(program.outlineEmphasis)
+	outlineEmphasis:    JSON.parse(program.outlineEmphasis),
+	forceVersion: 		JSON.parse(program.version),
+	verbosity:   		JSON.parse(program.verbosity)
 };
 
 // Creating a new Jeff
