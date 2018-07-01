@@ -229,29 +229,30 @@ Jeff.prototype._parseFileGroup = function (fileGroup, nextGroupCb) {
 
 Jeff.prototype._parseFile = function (swfName, nextSwfCb) {
 	if (this._options.verbosity >= 5) {
-		console.log('parsing: ' + swfName);
+		console.log('=================================');//to quickly find the start in a wall of text
+		console.log('Parsing: ' + swfName);
+		console.log('=================================');
 	}
 	var self = this;
 	var swfObjects = [];
 	function onFileRead(error, swfData) {
 		if (error) return nextSwfCb(error);
 		self._parser.parse(swfName, swfData, self._options,
-			function (swfObject) {
+			function (swfObject) {//include a .info on the object if you want to display more information
 				var id = swfObject.id;
 				swfObject._swfName = swfName;
 				
 				if(self._options.verbosity > 5)
 				{
-
-					console.log('parsing: ' + swfName);
-					
-					//console.log('object', JSON.stringify(swfObject));
-					console.log('');
-					console.log('--Object-- ');
+					console.log('\n--Object-- ');
 					console.log('Id', swfObject.id);
 					console.log('Type', swfObject.type);
-					for (var p in swfObject) {
-						console.log(p);
+					//for (var p in swfObject) {
+						//console.log(p);
+					//}
+					//console.log('object', JSON.stringify(swfObject));
+					if(swfObject.info != null) {
+						console.log(util.inspect(swfObject.info));
 					}
 				}
 
