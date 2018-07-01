@@ -2,6 +2,7 @@
 
 'use strict';
 
+var util = require('util');
 var Base = require('./base.js');
 var Stream = require('./stream.js');
 
@@ -42,25 +43,41 @@ SwfParser.prototype = {
 	// swfData is a buffer containing the SWF data
 	// onData(object) will be called several times with the result of the parsing of 1 object
 	// cb(error) will be called at the end or upon error
-	parse: function (swfName, swfData, onData, cb) {
+	parse: function (swfName, swfData, options, onData, cb) {
+		this.dataStorage = [];
 		this.swfName = swfName;
+		this._options = options;
 		this.onData  = onData;
 
-		var stream = new Stream(swfData);
+
+		var stream = new Stream(swfData, options);
 		this._readSwlTable(stream); // Symbol table not used
 		var sign = stream.readString(3);
 
-		this.version = stream.readUI8();
+		var version = stream.readUI8();
 		this.fileLen = stream.readUI32();
 
+		if(this._options.forceVersion == null || this._options.forceVersion == -1){
+			this._options.version = version;
+		}
+		else{
+			this._options.version = forceVersion;
+		}
+		
+		if(this._options.verbosity > 3){
+			console.log('Attempting to decompile for SWF Version:', this._options.version);
+		}
+
 		var signatures = Base.validSignatures;
-		if (sign === signatures.COMPRESSED_SWF) {
+		if (sign === signatures.COMPRESSED_ZLIB_SWF) {
 			var self = this;
 			stream.decompressAsync(function () {
 				self._parseSwf(stream, cb);
 			});
 		} else if (sign === signatures.SWF) {
 			this._parseSwf(stream, cb);
+		} else if (sign === signatures.COMPRESSED_LZMA_SWF) {
+			cb('No Support for LZMA Compressed SWF file: ' + swfName);
 		} else {
 			cb('Invalid SWF file: ' + swfName);
 		}
@@ -104,7 +121,7 @@ SwfParser.prototype = {
 		//create a "header" object with file level info
 		this.onData({
 			type: 'header',
-			version: this.version,
+			version: this._options.version,
 			fileLength: this.fileLen,
 			frameSize: stream.readRect(),
 			frameRate: stream.readUI16() / 256
@@ -252,9 +269,8 @@ SwfParser.prototype = {
 	_handleCsmTextSettings: function (stream, offset, len) {
 		this._skipEndOfTag('CsmTextSettings', true, stream, offset, len);
 	},
-	_handleDefineBinaryData: function (stream, offset, len) {
-		this._skipEndOfTag('DefineBinaryData', true, stream, offset, len);
-	},
+
+	
 	_handleDefineEditText: function (stream, offset, len) {
 		var id = stream.readUI16();
 		var edit = { type: 'fakeEditText', id: id };
@@ -351,7 +367,26 @@ SwfParser.prototype = {
 		if (code !== 0 || len !== 1) throw new Error('Unexpected value in undocumented1 tag: ' + code + ',' + len);
 	},
 	//---------------------------------------------------------
+	_handleDefineBinaryData: function (stream, offset, len) {
 
+		var headerSize = 6;
+		var info = {
+			binaryId: stream.readUI16(),		//16bit id
+			reserved: stream.readUB(32)			//reserved must be 0
+		}
+		var data = stream.readBytes(len - headerSize);
+
+		var fileToSave = {
+			id: info.binaryId,
+			type: 'binary',
+			fileName: info.binaryId+'.unknown',
+			info: info,
+			bytes: data
+		};
+
+		this.dataStorage.push(fileToSave);
+		this.onData(fileToSave);
+	},
 	_handleSymbolClass: function (stream, offset, len, frm) {
 		var count = stream.readUI16();
 		while (count--) {
@@ -902,11 +937,19 @@ SwfParser.prototype = {
 		while (true) {
 			var flags = stream.readUI8();
 			if (!flags) break;
-			var objId = stream.readUI16(),
-				depth = stream.readUI16(),
+			var objId = stream.readUI16();
+			var pointingTo;
+			if(d[objId] != null) {
+				pointingTo = d[objId].id;
+			}
+			else {
+				console.warn('Button '+id+' is pointing to a non existing resource');
+			}
+
+			var depth = stream.readUI16(),
 				state = 0x01,
 				character = {
-					id: d[objId].id,
+					id: pointingTo,
 					depth: depth,
 					matrix: stream.readMatrix()
 				};
@@ -943,6 +986,85 @@ SwfParser.prototype = {
 		frm.bgcolor = stream.readRGB();
 	},
 
+	_handleSoundStreamHead2: function (stream, offset, len) {
+		var f = Base.soundFormats;
+		var headerSize = 4;//7  bytes as defined next
+		if(len == 4)
+		{
+			//just the header... absolutly no data? how/why is this possible?
+			this._skipEndOfTag('SoundStreamHead2', true, stream, offset, len);
+			return;
+		}
+
+		var info = {
+			reserved: stream.readUB(4),					//not used, always 0
+			playbackSoundRate: stream.readUB(2),		//enum: soundRates
+			playbackSoundSize: stream.readUB(1),		//0: '8Bit', 1: '16Bit'
+			playbackSoundType: stream.readUB(1),		//0: 'Mono', 1: 'Stereo'
+			streamSoundFormat: stream.readUB(4),		//enum: soundFormats
+			streamSoundRate: stream.readUB(2),			//enum: soundRates
+			streamSoundSize: stream.readUB(1),			//0: '8Bit', 1: '16Bit'
+			streamSoundType: stream.readUB(1),			//0: 'Mono', 1: 'Stereo'
+			streamSoundSampleCount: stream.readUI16()	//--- in a single frame, I'm assuming there can't be more than 16 bits worth of sample
+		};
+
+		if(info.streamSoundRate == f.MP3)
+		{
+			info.latencySeek = stream.readSI16();		//only used for mp3
+		}
+
+		var soundData = stream.readBytes(len - headerSize);//is only a tiny bit of the information, todo: needs to be stored and joined together with the other audios of this block
+
+		console.warn('SoundStreamHead2 has '+ (len - headerSize) +' bytes of audio data which have not been handled.');
+	},
+
+	_handleDefineSound: function (stream, offset, len) {
+		var f = Base.soundFormats;
+		var headerSize = 7;//7  bytes as defined next
+		
+		var info = {
+			soundId: stream.readUI16(),
+			soundFormat: stream.readUB(4),
+			soundRate: stream.readUB(2),			//ignored for nellymoser and speex -- enums found in "soundRates"
+			soundSize: stream.readUB(1),			//only matters for uncompressed, compressed always becomes 16bit. 0: '8Bit', 1: '16Bit'
+			soundType: stream.readUB(1),			//Mono or stereo, ignored for Nellymoser and Speex, 0: 'Mono', 1: 'Stereo'
+			soundSampleCount: stream.readUI32()
+		};
+		
+		var fileToSave;
+
+		switch(info.soundFormat){
+		case f.UNCOMPRESSED_NATIVE_ENDIAN:
+		case f.ADPCM:
+		case f.UNCOMPRESSED_LITTLE_ENDIAN:
+		case f.NELLYMOSER16KHZ:
+		case f.NELLYMOSER8KHZ:
+		case f.NELLYMOSER:
+		case f.SPEEX:
+			console.warn('Sound format: '+info.soundFormat+' not supported');
+			break;
+		case f.MP3:
+			var soundData = stream.readBytes(len - headerSize);
+			fileToSave = {
+				id: info.soundId,
+				type: 'sound',
+				fileName: info.soundId+'.mp3',
+				info: info,
+				bytes: soundData
+			};
+			break;
+		default:
+			throw new Error('Sound format not known: '+info.soundFormat);
+		}
+		
+		if(fileToSave != null)
+		{
+			this.dataStorage.push(fileToSave);
+		}
+
+		this.onData(fileToSave);
+	},
+
 	_handleDefineFont: function (stream) {
 		var id = stream.readUI16(),
 			numGlyphs = stream.readUI16() / 2,
@@ -977,7 +1099,7 @@ SwfParser.prototype = {
 			isUTF8:         stream.readBool(),
 			isItalic:       stream.readBool(),
 			isBold:         stream.readBool(),
-			languageCode:   (this.version > 5) ? stream.readLanguageCode() : 0,
+			languageCode:   (this._options.version > 5) ? stream.readLanguageCode() : 0,
 			name:           stream.readUI8() && stream.readString()
 		};
 
@@ -1022,7 +1144,7 @@ SwfParser.prototype = {
 
 	_handleDefineFont3: function (stream, offset, len) {
 		var startingOffset = stream.offset;
-// console.error('version', this.version)
+// console.error('version', this._options.version)
 // console.error('offset -1', stream.offset)
 		var id = stream.readUI16();
 // console.error('offset 0', stream.offset)
@@ -1037,7 +1159,7 @@ SwfParser.prototype = {
 			isUTF8:         stream.readBool(),
 			isItalic:       stream.readBool(),
 			isBold:         stream.readBool(),
-			languageCode:   (this.version > 5) ? stream.readLanguageCode() : 0,
+			languageCode:   (this._options.version > 5) ? stream.readLanguageCode() : 0,
 			name:           stream.readUI8() && stream.readString()
 		};
 

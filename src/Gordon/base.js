@@ -17,7 +17,8 @@ var Base = {
 	},
 	validSignatures: {
 		SWF: 'FWS',
-		COMPRESSED_SWF: 'CWS'
+		COMPRESSED_ZLIB_SWF: 'CWS',
+		COMPRESSED_LZMA_SWF: 'ZWS'
 	},
 	readyStates: {
 		LOADING: 0,
@@ -303,6 +304,22 @@ var Base = {
 		13: 'overlay',
 		14: 'hardlight'
 	},
+	soundFormats: {
+		UNCOMPRESSED_NATIVE_ENDIAN: 0,		//swf 1
+		ADPCM: 1,							//swf 1
+		MP3: 2,								//swf 4
+		UNCOMPRESSED_LITTLE_ENDIAN: 3, 		//swf 4
+		NELLYMOSER16KHZ: 4, 				//swf 10
+		NELLYMOSER8KHZ: 5, 					//swf 10
+		NELLYMOSER: 6, 						//swf 6
+		SPEEX: 11 							//swf 10
+	},
+	soundRates: {
+		0: 5500,
+		1: 11000,
+		2: 22000,
+		3: 44000
+	}
 };
 
 (function () {

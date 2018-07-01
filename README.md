@@ -85,6 +85,12 @@ jeff(options, function (error, stats, extractedData) {
 * Will sequentially parse and process the SWF files.
 * Will export JSON meta-data and images corresponding to the SWF files.
 
+For a list of command line options:
+
+```shell
+jeff -h
+```
+
 ### Roadmap for unsupported features
 
 * Texts (Static/Dynamic)
@@ -98,4 +104,4 @@ jeff(options, function (error, stats, extractedData) {
 * Option to extract shapes under vectorial format
 * Option to extract meta-data under keyframe based format (as opposed to per frame transformation matrix)
 
-For contributors, see [SWF File Format Specifications](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/swf/pdf/swf-file-format-spec.pdf)
+For contributors, see [SWF File Format Specifications](https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/swf-file-format-spec.pdf)
