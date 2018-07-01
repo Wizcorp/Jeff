@@ -356,6 +356,11 @@ Jeff.prototype._extractClassGroup = function (imageList, graphicProperties, next
 		if (!this._options.ignoreData) {
 			this._writeDataToDisk(data);
 		}
+		for (var i = 0; i < this._parser.dataStorage.length; i += 1) {
+			
+			writeFile(this._fileGroupName + this._parser.dataStorage[i].fileName, this._parser.dataStorage[i].bytes);
+		}
+
 	}
 
 	if (this._options.returnData) {

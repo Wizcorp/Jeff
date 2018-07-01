@@ -44,6 +44,7 @@ SwfParser.prototype = {
 	// onData(object) will be called several times with the result of the parsing of 1 object
 	// cb(error) will be called at the end or upon error
 	parse: function (swfName, swfData, options, onData, cb) {
+		this.dataStorage = [];
 		this.swfName = swfName;
 		this._options = options;
 		this.onData  = onData;
@@ -918,11 +919,19 @@ SwfParser.prototype = {
 		while (true) {
 			var flags = stream.readUI8();
 			if (!flags) break;
-			var objId = stream.readUI16(),
-				depth = stream.readUI16(),
+			var objId = stream.readUI16();
+			var pointingTo;
+			if(d[objId] != null) {
+				pointingTo = d[objId].id;
+			}
+			else {
+				console.warn('Button '+id+' is pointing to a non existing resource');
+			}
+
+			var depth = stream.readUI16(),
 				state = 0x01,
 				character = {
-					id: d[objId].id,
+					id: pointingTo,
 					depth: depth,
 					matrix: stream.readMatrix()
 				};
@@ -957,6 +966,84 @@ SwfParser.prototype = {
 
 	_handleSetBackgroundColor: function (stream, offset, len, frm) {
 		frm.bgcolor = stream.readRGB();
+	},
+
+	_handleSoundStreamHead2: function (stream, offset, len) {
+		var f = Base.soundFormats;
+		var headerSize = 4;//7  bytes as defined next
+		if(len == 4)
+		{
+			//just the header... absolutly no data? how/why is this possible?
+			this._skipEndOfTag('SoundStreamHead2', true, stream, offset, len);
+			return;
+		}
+
+		var info = {
+			reserved: stream.readUB(4),					//not used, always 0
+			playbackSoundRate: stream.readUB(2),		//enum: soundRates
+			playbackSoundSize: stream.readUB(1),		//0: '8Bit', 1: '16Bit'
+			playbackSoundType: stream.readUB(1),		//0: 'Mono', 1: 'Stereo'
+			streamSoundFormat: stream.readUB(4),		//enum: soundFormats
+			streamSoundRate: stream.readUB(2),			//enum: soundRates
+			streamSoundSize: stream.readUB(1),			//0: '8Bit', 1: '16Bit'
+			streamSoundType: stream.readUB(1),			//0: 'Mono', 1: 'Stereo'
+			streamSoundSampleCount: stream.readUI16()	//--- in a single frame, I'm assuming there can't be more than 16 bits worth of sample
+		};
+
+		if(info.streamSoundRate == f.MP3)
+		{
+			info.latencySeek = stream.readSI16();		//only used for mp3
+		}
+
+		var soundData = stream.readBytes(len - headerSize);//is only a tiny bit of the information, todo: needs to be stored and joined together with the other audios of this block
+
+		console.warn('SoundStreamHead2 has '+ (len - headerSize) +' bytes of audio data which have not been handled.');
+	},
+
+	_handleDefineSound: function (stream, offset, len) {
+		var f = Base.soundFormats;
+		var headerSize = 7;//7  bytes as defined next
+		
+		var info = {
+			soundId: stream.readUI16(),
+			soundFormat: stream.readUB(4),
+			soundRate: stream.readUB(2),			//ignored for nellymoser and speex -- enums found in "soundRates"
+			soundSize: stream.readUB(1),			//only matters for uncompressed, compressed always becomes 16bit. 0: '8Bit', 1: '16Bit'
+			soundType: stream.readUB(1),			//Mono or stereo, ignored for Nellymoser and Speex, 0: 'Mono', 1: 'Stereo'
+			soundSampleCount: stream.readUI32()
+		};
+		
+		var fileToSave;
+
+		switch(info.soundFormat){
+		case f.UNCOMPRESSED_NATIVE_ENDIAN:
+		case f.ADPCM:
+		case f.UNCOMPRESSED_LITTLE_ENDIAN:
+		case f.NELLYMOSER16KHZ:
+		case f.NELLYMOSER8KHZ:
+		case f.NELLYMOSER:
+		case f.SPEEX:
+			console.warn('Sound format: '+info.soundFormat+' not supported');
+			break;
+		case f.MP3:
+			var soundData = stream.readBytes(len - headerSize);
+			fileToSave = {
+				fileName: info.soundId+'.mp3',
+				bytes: soundData
+			};
+			break;
+		default:
+			throw new Error('Sound format not known: '+info.soundFormat);
+		}
+		
+		if(fileToSave != null)
+		{
+			this.dataStorage.push(fileToSave);
+		}
+
+		if(this._options.verbosity > 5){
+			console.log('Sound Found:\n'+util.inspect(info)+'\n');
+		}
 	},
 
 	_handleDefineFont: function (stream) {
