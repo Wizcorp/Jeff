@@ -269,9 +269,8 @@ SwfParser.prototype = {
 	_handleCsmTextSettings: function (stream, offset, len) {
 		this._skipEndOfTag('CsmTextSettings', true, stream, offset, len);
 	},
-	_handleDefineBinaryData: function (stream, offset, len) {
-		this._skipEndOfTag('DefineBinaryData', true, stream, offset, len);
-	},
+
+	
 	_handleDefineEditText: function (stream, offset, len) {
 		var id = stream.readUI16();
 		var edit = { type: 'fakeEditText', id: id };
@@ -368,7 +367,26 @@ SwfParser.prototype = {
 		if (code !== 0 || len !== 1) throw new Error('Unexpected value in undocumented1 tag: ' + code + ',' + len);
 	},
 	//---------------------------------------------------------
+	_handleDefineBinaryData: function (stream, offset, len) {
 
+		var headerSize = 6;
+		var info = {
+			binaryId: stream.readUI16(),		//16bit id
+			reserved: stream.readUB(32)			//reserved must be 0
+		}
+		var data = stream.readBytes(len - headerSize);
+
+		var fileToSave = {
+			id: info.binaryId,
+			type: 'binary',
+			fileName: info.binaryId+'.unknown',
+			info: info,
+			bytes: data
+		};
+
+		this.dataStorage.push(fileToSave);
+		this.onData(fileToSave);
+	},
 	_handleSymbolClass: function (stream, offset, len, frm) {
 		var count = stream.readUI16();
 		while (count--) {
@@ -1028,7 +1046,10 @@ SwfParser.prototype = {
 		case f.MP3:
 			var soundData = stream.readBytes(len - headerSize);
 			fileToSave = {
+				id: info.soundId,
+				type: 'sound',
 				fileName: info.soundId+'.mp3',
+				info: info,
 				bytes: soundData
 			};
 			break;
@@ -1041,9 +1062,7 @@ SwfParser.prototype = {
 			this.dataStorage.push(fileToSave);
 		}
 
-		if(this._options.verbosity > 5){
-			console.log('Sound Found:\n'+util.inspect(info)+'\n');
-		}
+		this.onData(fileToSave);
 	},
 
 	_handleDefineFont: function (stream) {
