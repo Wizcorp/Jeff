@@ -4,7 +4,7 @@ var processShape = require('./processShape');
 
 function createSymbol(swfObject) {
 	var symbol = { id: swfObject.id, swfObject: swfObject, parents: {} };
-	
+
 	switch(swfObject.type) {
 
 	case 'main':
@@ -28,18 +28,16 @@ function createSymbol(swfObject) {
 
 	case 'shape':
 		var shapes = swfObject.edges;
+		var nbShapes = shapes.length;
 		var imagesArray  = [];
-		for (var s = 0; s < shapes.length; s += 1) {
+		for (var s = 0; s < nbShapes; s++) {
 			var shape = shapes[s];
 
-			var fill = shape.leftFill;
-			var containsImage = fill ? (fill.type ? (fill.type === 'pattern') : false) : false;
-			if (!containsImage) {
-				fill = shape.rightFill;
-				containsImage = fill ? (fill.type ? (fill.type === 'pattern') : false) : false;
-			}
+			var isLeftFill = shape && shape.leftFill && shape.leftFill.type === 'pattern';
+			var isRightFill = shape && shape.rightFill && shape.rightFill.type === 'pattern';
 
-			if (containsImage) {
+			if (isLeftFill || isRightFill) {
+                var fill = isLeftFill ? shape.leftFill : shape.rightFill;
 				var m = fill.matrix;
 
 				// In case of an image all the components of the matrix have to be divided by 20
@@ -115,7 +113,7 @@ function createSymbol(swfObject) {
 function createSymbols(swfObjects) {
 	var symbols = [];
 	var nbSymbols = swfObjects.length;
-	for (var s = 0; s < nbSymbols; s += 1) {
+	for (var s = 0; s < nbSymbols; s++) {
 		var swfObject = swfObjects[s];
 		symbols[swfObject.id] = createSymbol(swfObject);
 	}
