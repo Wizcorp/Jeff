@@ -11,7 +11,8 @@
 		"jeff": "./bin/jeff"
 	},
 	"scripts": {
-		"test": "NODE_ENV=test mocha './**/*.test.js'"
+		"test": "NODE_ENV=test mocha './**/*.test.js'",
+		"istanbul": "istanbul cover _mocha $(find ./ -name \"*.test.js\" -not -path \"./node_modules/*\")"
 	},
 	"main": "./src/index.js",
 	"dependencies": {
@@ -23,9 +24,12 @@
 		"glob": "4.3.1",
 		"image-optim": "0.3.0",
 		"js-beautify": "1.4.2",
-		"node-pngquant-native": "1.0.5",
+		"node-pngquant-native": "1.0.5"
+	},
+	"devDependencies" : {
 		"chai": "4.1.2",
-		"mocha": "5.2.0"
+		"mocha": "5.2.0",
+		"istanbul": "0.4.5"
 	},
 	"repository": {
 		"type": "git",
