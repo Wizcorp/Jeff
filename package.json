@@ -10,6 +10,9 @@
 	"bin": {
 		"jeff": "./bin/jeff"
 	},
+	"scripts": {
+		"test": "NODE_ENV=test mocha './**/*.test.js'"
+	},
 	"main": "./src/index.js",
 	"dependencies": {
 		"async": "0.2.10",
@@ -20,7 +23,10 @@
 		"glob": "4.3.1",
 		"image-optim": "0.3.0",
 		"js-beautify": "1.4.2",
-		"node-pngquant-native": "1.0.5"
+		"node-pngquant-native": "1.0.5",
+		"chai": "4.1.2",
+		"mocha": "5.2.0",
+		"sinon": "6.1.4"
 	},
 	"repository": {
 		"type": "git",
