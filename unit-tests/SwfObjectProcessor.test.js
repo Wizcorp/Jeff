@@ -20,6 +20,19 @@ describe('Add class names', function () {
         expect(result[0].className).to.eql(classNamesKeys[0]);
     });
 
+    it('add no class', function () {
+        const symbols = [];
+
+        const classNames = {
+            test: [0]
+        };
+
+        const result = addClassNames(symbols, classNames);
+
+        expect(result).to.be.empty;
+    });
+
+    // Monkey test
     it('add two or more class name', function () {
         const min = 2;
         const max = 5;
