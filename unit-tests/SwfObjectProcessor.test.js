@@ -229,6 +229,34 @@ describe('Create Symbols', function () {
         }]);
     });
 
+    it('create symbol from swf object of type \'shape\' with no edges', function () {
+        const id = 0;
+        const length = 20;
+
+        const swfObjects = [{
+            id: id,
+            type: 'shape',
+            edges: [],
+            bounds: {
+                left: length,
+                right: length,
+                top: length,
+                bottom: length
+            }
+        }];
+
+        const result = createSymbols(swfObjects);
+
+        expect(result[id]).to.exist;
+        expect(result[id]).to.have.own.property('bounds');
+        expect(result[id].bounds).to.eql([{
+            left: length / 20,
+            right: length / 20,
+            top: length / 20,
+            bottom: length / 20
+        }]);
+    });
+
     it('create symbol from swf object of type \'morph\'', function () {
         const id = 0;
         const startLength = 20;
@@ -299,6 +327,79 @@ describe('Create Symbols', function () {
             right: length / 20,
             top: length / 20,
             bottom: length / 20
+        });
+    });
+
+    it('create symbol from swf object of type \'sprite\' with no scalingGrid', function () {
+        const id = 0;
+        const frameCount = 1;
+
+        const swfObjects = [{
+            id: id,
+            type: 'sprite',
+            frameCount: frameCount
+        }];
+
+        const result = createSymbols(swfObjects);
+
+        expect(result[id]).to.exist;
+        expect(result[id]).to.have.own.property('isAnimation');
+        expect(result[id].isAnimation).to.be.true;
+        expect(result[id]).to.have.own.property('duration');
+        expect(result[id].duration).to.eql(frameCount);
+    });
+
+    it('create symbol from swf object of type \'font\'', function () {
+        const id = 0;
+
+        const swfObjects = [{
+            id: id,
+            type: 'font'
+        }];
+
+        const result = createSymbols(swfObjects);
+
+        expect(result[id]).to.exist;
+        expect(result[id]).to.eql({
+            id: id,
+            swfObject: swfObjects[0],
+            parents: {}
+        });
+    });
+
+    it('create symbol from swf object of type \'text\'', function () {
+        const id = 0;
+
+        const swfObjects = [{
+            id: id,
+            type: 'text'
+        }];
+
+        const result = createSymbols(swfObjects);
+
+        expect(result[id]).to.exist;
+        expect(result[id]).to.eql({
+            id: id,
+            swfObject: swfObjects[0],
+            parents: {}
+        });
+    });
+
+    it('create symbol from swf object of unknown type', function () {
+        const id = 0;
+
+        const swfObjects = [{
+            id: id,
+            type: 'null'
+        }];
+
+        const result = createSymbols(swfObjects);
+
+        expect(result[id]).to.exist;
+        expect(result[id]).to.eql({
+            id: id,
+            swfObject: swfObjects[0],
+            parents: {}
         });
     });
 });
