@@ -444,6 +444,24 @@ describe('Remove Symbols', function () {
         }]);
     });
 
+    it('fail removing symbol because removeList is null or empty', function () {
+        const classSymbols = [{
+            children: [{
+                id: 0
+            }]
+        }];
+
+        const emptyRemoveList = null;
+
+        removeSymbols(symbols, classSymbols, emptyRemoveList);
+
+        expect(classSymbols).to.be.eql([{
+            children: [{
+                id: 0
+            }]
+        }]);
+    });
+
     it('fail removing symbol because symbols doesn\'t have className attribute', function () {
         const emptySymbols = [{
             empty: ''
@@ -473,6 +491,22 @@ describe('Remove Symbols', function () {
 
         expect(emptyClassSymbols).to.be.eql([{
             empty: ''
+        }]);
+    });
+
+    it('fail removing symbol because classSymbols\' children doesn\'t have id attribute', function () {
+        const classSymbols = [{
+            children: [{
+                empty: ''
+            }]
+        }];
+
+        removeSymbols(symbols, classSymbols, removeList);
+
+        expect(classSymbols).to.be.eql([{
+            children: [{
+                empty: ''
+            }]
         }]);
     });
 });
