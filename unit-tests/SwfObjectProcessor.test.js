@@ -406,18 +406,18 @@ describe('Create Symbols', function () {
 });
 
 describe('Remove Symbols', function () {
-    it('remove 1 symbol', function () {
-        const symbols = [{
-            className: 'test'
-        }];
+    const symbols = [{
+        className: 'test'
+    }];
 
+    const removeList = 'test';
+
+    it('remove 1 symbol', function () {
         const classSymbols = [{
             children: [{
                 id: 0
             }]
         }];
-
-        const removeList = 'test';
 
         removeSymbols(symbols, classSymbols, removeList);
 
@@ -427,19 +427,15 @@ describe('Remove Symbols', function () {
     });
 
     it('fail removing symbol because className doesn\'t exist in removeList', function () {
-        const symbols = [{
-            className: 'test'
-        }];
-
         const classSymbols = [{
             children: [{
                 id: 0
             }]
         }];
 
-        const removeList = 'null';
+        const emptyRemoveList = 'null';
 
-        removeSymbols(symbols, classSymbols, removeList);
+        removeSymbols(symbols, classSymbols, emptyRemoveList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
@@ -449,7 +445,7 @@ describe('Remove Symbols', function () {
     });
 
     it('fail removing symbol because symbols doesn\'t have className attribute', function () {
-        const symbols = [{
+        const emptySymbols = [{
             empty: ''
         }];
 
@@ -459,9 +455,7 @@ describe('Remove Symbols', function () {
             }]
         }];
 
-        const removeList = 'test';
-
-        removeSymbols(symbols, classSymbols, removeList);
+        removeSymbols(emptySymbols, classSymbols, removeList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
@@ -471,19 +465,13 @@ describe('Remove Symbols', function () {
     });
 
     it('fail removing symbol because classSymbols doesn\'t have children attribute', function () {
-        const symbols = [{
-            className: 'test'
-        }];
-
-        const classSymbols = [{
+        const emptyClassSymbols = [{
             empty: ''
         }];
 
-        const removeList = 'test';
+        removeSymbols(symbols, emptyClassSymbols, removeList);
 
-        removeSymbols(symbols, classSymbols, removeList);
-
-        expect(classSymbols).to.be.eql([{
+        expect(emptyClassSymbols).to.be.eql([{
             empty: ''
         }]);
     });
