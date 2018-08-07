@@ -2,6 +2,7 @@ const expect = require('chai').expect;
 
 const addClassNames = require('../src/SwfObjectProcessor/addClassNames');
 const createSymbols = require('../src/SwfObjectProcessor/createSymbols');
+const removeSymbols = require('../src/SwfObjectProcessor/removeSymbols');
 
 describe('Add class names', function () {
     it('add one class name', function () {
@@ -402,4 +403,42 @@ describe('Create Symbols', function () {
             parents: {}
         });
     });
+});
+
+describe('Remove Symbols', function () {
+    it('remove 4 symbols: 1 success and 3 fails', function () {
+        const symbols = [{
+            className: 'test'
+        }, {
+            empty: ''
+        }, {
+            className: 'null'
+        }];
+
+        const classSymbols = [{
+            children: [{
+                id: 0
+            }, {
+                id: 1
+            }, {
+                id: 2
+            }]
+        }, {
+            empty: ''
+        }];
+
+        const removeList = 'test';
+
+        removeSymbols(symbols, classSymbols, removeList);
+
+        expect(classSymbols).to.be.eql([{
+            children: [{
+                id: 1
+            }, {
+                id: 2
+            }]
+        }, {
+            empty: ''
+        }]);
+    })
 });
