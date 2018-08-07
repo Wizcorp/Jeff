@@ -406,25 +406,57 @@ describe('Create Symbols', function () {
 });
 
 describe('Remove Symbols', function () {
-    it('remove 4 symbols: 1 success and 3 fails', function () {
+    it('remove 1 symbol', function () {
         const symbols = [{
             className: 'test'
-        }, {
-            empty: ''
-        }, {
-            className: 'null'
         }];
 
         const classSymbols = [{
             children: [{
                 id: 0
-            }, {
-                id: 1
-            }, {
-                id: 2
             }]
-        }, {
+        }];
+
+        const removeList = 'test';
+
+        removeSymbols(symbols, classSymbols, removeList);
+
+        expect(classSymbols).to.be.eql([{
+            children: []
+        }]);
+    });
+
+    it('fail removing symbol because className doesn\'t exist in removeList', function () {
+        const symbols = [{
+            className: 'test'
+        }];
+
+        const classSymbols = [{
+            children: [{
+                id: 0
+            }]
+        }];
+
+        const removeList = 'null';
+
+        removeSymbols(symbols, classSymbols, removeList);
+
+        expect(classSymbols).to.be.eql([{
+            children: [{
+                id: 0
+            }]
+        }]);
+    });
+
+    it('fail removing symbol because symbols doesn\'t have className attribute', function () {
+        const symbols = [{
             empty: ''
+        }];
+
+        const classSymbols = [{
+            children: [{
+                id: 0
+            }]
         }];
 
         const removeList = 'test';
@@ -433,12 +465,26 @@ describe('Remove Symbols', function () {
 
         expect(classSymbols).to.be.eql([{
             children: [{
-                id: 1
-            }, {
-                id: 2
+                id: 0
             }]
-        }, {
+        }]);
+    });
+
+    it('fail removing symbol because classSymbols doesn\'t have children attribute', function () {
+        const symbols = [{
+            className: 'test'
+        }];
+
+        const classSymbols = [{
+            empty: ''
+        }];
+
+        const removeList = 'test';
+
+        removeSymbols(symbols, classSymbols, removeList);
+
+        expect(classSymbols).to.be.eql([{
             empty: ''
         }]);
-    })
+    });
 });
