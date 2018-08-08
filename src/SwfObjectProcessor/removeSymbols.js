@@ -1,30 +1,40 @@
 'use strict';
 
-function removeSymbols(symbols, classSymbols, removeList){
-	var nbClassSymbols = classSymbols.length;
-	for (var s = 0; s < nbClassSymbols; s += 1) {
+function removeSymbols(symbols, classSymbols, removeList) {
+    var nbClassSymbols = classSymbols.length;
 
-		var classSymbol = classSymbols[s];
-		if (!classSymbol || !classSymbol.children) {
-			continue;
-		}
+    for (var s = 0; s < nbClassSymbols; s++) {
+        var classSymbol = classSymbols[s];
 
-		var children = classSymbol.children;
-		for (var c = 0; c < children.length; c += 1) {
+        if (!classSymbol || !classSymbol.children) {
+            continue;
+        }
 
-			var child  = children[c];
-			var symbol = symbols[child.id];
-			if (!symbol.className){
-				continue;
-			}
+        var children = classSymbol.children;
 
-			var idx = removeList.indexOf(symbol.className);
-			if (idx !== -1) {
-				children.splice(c, 1);
-				c -= 1;
-			}
-		}
-	}
+        for (var c = 0; c < children.length; c++) {
+            var child = children[c];
+
+            if (!child || typeof child.id === "undefined") {
+                continue;
+            }
+
+            var symbol = symbols[child.id];
+
+            if (!symbol || !symbol.className) {
+                continue;
+            }
+
+            if (removeList && removeList.length > 0) {
+                var idx = removeList.indexOf(symbol.className);
+
+                if (idx !== -1) {
+                    children.splice(c, 1);
+                    c -= 1;
+                }
+            }
+        }
+    }
 }
 
 module.exports = removeSymbols;

@@ -10,17 +10,26 @@
 	"bin": {
 		"jeff": "./bin/jeff"
 	},
+	"scripts": {
+		"test": "NODE_ENV=test mocha --recursive unit-tests",
+		"istanbul": "istanbul cover _mocha unit-tests/**/*.test.js"
+	},
 	"main": "./src/index.js",
 	"dependencies": {
-        "async": "0.2.10",
-        "buffer-crc32": "^0.2.5",
-        "canvas": "1.1.6",
-        "commander": "2.2.0",
-        "fs-extra": "0.8.1",
-        "glob": "4.3.1",
-        "image-optim": "0.3.0",
-        "js-beautify": "1.4.2",
-        "node-pngquant-native": "0.0.12"
+		"async": "0.2.10",
+		"buffer-crc32": "^0.2.5",
+		"canvas": "1.6.11",
+		"commander": "2.2.0",
+		"fs-extra": "0.8.1",
+		"glob": "4.3.1",
+		"image-optim": "0.3.0",
+		"js-beautify": "1.4.2",
+		"node-pngquant-native": "1.0.5"
+	},
+	"devDependencies" : {
+		"chai": "4.1.2",
+		"mocha": "5.2.0",
+		"istanbul": "0.4.5"
 	},
 	"repository": {
 		"type": "git",
