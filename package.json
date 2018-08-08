@@ -11,8 +11,8 @@
 		"jeff": "./bin/jeff"
 	},
 	"scripts": {
-		"test": "NODE_ENV=test mocha './**/*.test.js'",
-		"istanbul": "istanbul cover _mocha $(find ./ -name \"*.test.js\" -not -path \"./node_modules/*\")"
+		"test": "NODE_ENV=test mocha --recursive unit-tests",
+		"istanbul": "istanbul cover _mocha unit-tests/**/*.test.js"
 	},
 	"main": "./src/index.js",
 	"dependencies": {
