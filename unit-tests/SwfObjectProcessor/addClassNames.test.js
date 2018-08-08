@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 
-const addClassNamesTest = require('../../src/SwfObjectProcessor/addClassNames');
+const addClassNames = require('../../src/SwfObjectProcessor/addClassNames');
 
 describe('Add class names', function () {
     it('add one class name', function () {
@@ -12,7 +12,7 @@ describe('Add class names', function () {
 
         const classNamesKeys = Object.keys(classNames);
 
-        const result = addClassNamesTest(symbols, classNames);
+        const result = addClassNames(symbols, classNames);
 
         expect(result[0]).to.exist;
         expect(result[0]).to.have.own.property('className');
@@ -26,7 +26,7 @@ describe('Add class names', function () {
             test: [0]
         };
 
-        const result = addClassNamesTest(symbols, classNames);
+        const result = addClassNames(symbols, classNames);
 
         expect(result).to.be.empty;
     });

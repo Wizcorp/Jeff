@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 
-const createSymbolsTest = require('../../src/SwfObjectProcessor/createSymbols');
+const createSymbols = require('../../src/SwfObjectProcessor/createSymbols');
 
 describe('Create Symbols', function () {
     it('create symbol from swf object of type \'main\'', function () {
@@ -13,7 +13,7 @@ describe('Create Symbols', function () {
             frameCount: frameCount
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -34,7 +34,7 @@ describe('Create Symbols', function () {
             height: height
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -124,7 +124,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -186,7 +186,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('bounds');
@@ -220,7 +220,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -255,7 +255,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -281,7 +281,7 @@ describe('Create Symbols', function () {
             frameCount: frameCount
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -298,7 +298,7 @@ describe('Create Symbols', function () {
             type: 'font'
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({
@@ -316,7 +316,7 @@ describe('Create Symbols', function () {
             type: 'text'
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({
@@ -334,7 +334,7 @@ describe('Create Symbols', function () {
             type: 'null'
         }];
 
-        const result = createSymbolsTest(swfObjects);
+        const result = createSymbols(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({

@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 
-const removeSymbolsTest = require('../../src/SwfObjectProcessor/removeSymbols');
+const removeSymbols = require('../../src/SwfObjectProcessor/removeSymbols');
 
 describe('Remove Symbols', function () {
     const symbols = [{
@@ -16,7 +16,7 @@ describe('Remove Symbols', function () {
             }]
         }];
 
-        removeSymbolsTest(symbols, classSymbols, removeList);
+        removeSymbols(symbols, classSymbols, removeList);
 
         expect(classSymbols).to.be.eql([{
             children: []
@@ -32,7 +32,7 @@ describe('Remove Symbols', function () {
 
         const emptyRemoveList = 'null';
 
-        removeSymbolsTest(symbols, classSymbols, emptyRemoveList);
+        removeSymbols(symbols, classSymbols, emptyRemoveList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
@@ -50,7 +50,7 @@ describe('Remove Symbols', function () {
 
         const emptyRemoveList = null;
 
-        removeSymbolsTest(symbols, classSymbols, emptyRemoveList);
+        removeSymbols(symbols, classSymbols, emptyRemoveList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
@@ -70,7 +70,7 @@ describe('Remove Symbols', function () {
             }]
         }];
 
-        removeSymbolsTest(emptySymbols, classSymbols, removeList);
+        removeSymbols(emptySymbols, classSymbols, removeList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
@@ -84,7 +84,7 @@ describe('Remove Symbols', function () {
             empty: ''
         }];
 
-        removeSymbolsTest(symbols, emptyClassSymbols, removeList);
+        removeSymbols(symbols, emptyClassSymbols, removeList);
 
         expect(emptyClassSymbols).to.be.eql([{
             empty: ''
@@ -98,7 +98,7 @@ describe('Remove Symbols', function () {
             }]
         }];
 
-        removeSymbolsTest(symbols, classSymbols, removeList);
+        removeSymbols(symbols, classSymbols, removeList);
 
         expect(classSymbols).to.be.eql([{
             children: [{
