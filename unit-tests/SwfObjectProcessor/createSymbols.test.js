@@ -1,66 +1,6 @@
 const expect = require('chai').expect;
 
-const addClassNames = require('../src/SwfObjectProcessor/addClassNames');
-const createSymbols = require('../src/SwfObjectProcessor/createSymbols');
-const removeSymbols = require('../src/SwfObjectProcessor/removeSymbols');
-
-describe('Add class names', function () {
-    it('add one class name', function () {
-        const symbols = [{}];
-
-        const classNames = {
-            test: [0]
-        };
-
-        const classNamesKeys = Object.keys(classNames);
-
-        const result = addClassNames(symbols, classNames);
-
-        expect(result[0]).to.exist;
-        expect(result[0]).to.have.own.property('className');
-        expect(result[0].className).to.eql(classNamesKeys[0]);
-    });
-
-    it('add no class', function () {
-        const symbols = [];
-
-        const classNames = {
-            test: [0]
-        };
-
-        const result = addClassNames(symbols, classNames);
-
-        expect(result).to.be.empty;
-    });
-
-    // Monkey test
-    it('add two or more class name', function () {
-        const min = 2;
-        const max = 5;
-        const random = Math.floor(Math.random() * (max - min + 1)) + min;
-
-        const symbols = [];
-
-        const classNames = {
-            test: []
-        };
-
-        for (let i = 0; i < random; i++) {
-            symbols.push({});
-            classNames.test.push(i);
-        }
-
-        const classNamesKeys = Object.keys(classNames);
-
-        const result = addClassNames(symbols, classNames);
-
-        for (let i = 0; i < random; i++) {
-            expect(result[i]).to.exist;
-            expect(result[i]).to.have.own.property('className');
-            expect(result[i].className).to.eql(classNamesKeys[0]);
-        }
-    });
-});
+const createSymbolsTest = require('../../src/SwfObjectProcessor/createSymbols');
 
 describe('Create Symbols', function () {
     it('create symbol from swf object of type \'main\'', function () {
@@ -73,7 +13,7 @@ describe('Create Symbols', function () {
             frameCount: frameCount
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -94,7 +34,7 @@ describe('Create Symbols', function () {
             height: height
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -184,7 +124,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -246,7 +186,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('bounds');
@@ -280,7 +220,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isGraphic');
@@ -315,7 +255,7 @@ describe('Create Symbols', function () {
             }
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -341,7 +281,7 @@ describe('Create Symbols', function () {
             frameCount: frameCount
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.have.own.property('isAnimation');
@@ -358,7 +298,7 @@ describe('Create Symbols', function () {
             type: 'font'
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({
@@ -376,7 +316,7 @@ describe('Create Symbols', function () {
             type: 'text'
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({
@@ -394,7 +334,7 @@ describe('Create Symbols', function () {
             type: 'null'
         }];
 
-        const result = createSymbols(swfObjects);
+        const result = createSymbolsTest(swfObjects);
 
         expect(result[id]).to.exist;
         expect(result[id]).to.eql({
@@ -402,111 +342,5 @@ describe('Create Symbols', function () {
             swfObject: swfObjects[0],
             parents: {}
         });
-    });
-});
-
-describe('Remove Symbols', function () {
-    const symbols = [{
-        className: 'test'
-    }];
-
-    const removeList = 'test';
-
-    it('remove 1 symbol', function () {
-        const classSymbols = [{
-            children: [{
-                id: 0
-            }]
-        }];
-
-        removeSymbols(symbols, classSymbols, removeList);
-
-        expect(classSymbols).to.be.eql([{
-            children: []
-        }]);
-    });
-
-    it('fail removing symbol because className doesn\'t exist in removeList', function () {
-        const classSymbols = [{
-            children: [{
-                id: 0
-            }]
-        }];
-
-        const emptyRemoveList = 'null';
-
-        removeSymbols(symbols, classSymbols, emptyRemoveList);
-
-        expect(classSymbols).to.be.eql([{
-            children: [{
-                id: 0
-            }]
-        }]);
-    });
-
-    it('fail removing symbol because removeList is null or empty', function () {
-        const classSymbols = [{
-            children: [{
-                id: 0
-            }]
-        }];
-
-        const emptyRemoveList = null;
-
-        removeSymbols(symbols, classSymbols, emptyRemoveList);
-
-        expect(classSymbols).to.be.eql([{
-            children: [{
-                id: 0
-            }]
-        }]);
-    });
-
-    it('fail removing symbol because symbols doesn\'t have className attribute', function () {
-        const emptySymbols = [{
-            empty: ''
-        }];
-
-        const classSymbols = [{
-            children: [{
-                id: 0
-            }]
-        }];
-
-        removeSymbols(emptySymbols, classSymbols, removeList);
-
-        expect(classSymbols).to.be.eql([{
-            children: [{
-                id: 0
-            }]
-        }]);
-    });
-
-    it('fail removing symbol because classSymbols doesn\'t have children attribute', function () {
-        const emptyClassSymbols = [{
-            empty: ''
-        }];
-
-        removeSymbols(symbols, emptyClassSymbols, removeList);
-
-        expect(emptyClassSymbols).to.be.eql([{
-            empty: ''
-        }]);
-    });
-
-    it('fail removing symbol because classSymbols\' children doesn\'t have id attribute', function () {
-        const classSymbols = [{
-            children: [{
-                empty: ''
-            }]
-        }];
-
-        removeSymbols(symbols, classSymbols, removeList);
-
-        expect(classSymbols).to.be.eql([{
-            children: [{
-                empty: ''
-            }]
-        }]);
     });
 });
